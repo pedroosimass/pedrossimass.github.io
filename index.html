@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProductFlix</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#e50914;--dark:#141414;--muted:#b3b3b3}
+body{background:var(--dark);color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;overflow-x:hidden}
+
+/* NAVBAR */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;padding:0 4%;height:68px;background:linear-gradient(to bottom,rgba(0,0,0,.9),transparent);transition:background .3s}
+.navbar.scrolled{background:#141414}
+.navbar-logo{font-size:2rem;font-weight:900;color:var(--red);letter-spacing:-1px;margin-right:28px;text-decoration:none;cursor:pointer}
+.navbar-links{display:flex;gap:20px;list-style:none;flex:1}
+.navbar-links a{color:var(--muted);text-decoration:none;font-size:.85rem;transition:color .2s;cursor:pointer}
+.navbar-links a:hover,.navbar-links a.active{color:#fff}
+.navbar-right{display:flex;align-items:center;gap:18px;margin-left:auto}
+.navbar-avatar{width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#e50914,#b20710);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;cursor:pointer}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:120px 0 100px;overflow:hidden}
+.hero-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:url('https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1600&q=80') center/cover no-repeat;z-index:0}
+.hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(to right,rgba(8,8,20,.93) 30%,rgba(8,8,20,.6) 60%,rgba(8,8,20,.25) 100%),linear-gradient(to bottom,rgba(8,8,20,.1) 0%,rgba(8,8,20,.85) 100%);pointer-events:none}
+.hero-badge{position:relative;z-index:2;padding:0 4%;display:flex;flex-direction:column;gap:16px;max-width:660px}
+.hero-rank{font-size:.8rem;font-weight:700;letter-spacing:3px;color:var(--red);text-transform:uppercase}
+.hero-title{font-size:clamp(2.5rem,5vw,4.5rem);font-weight:900;line-height:1.05;text-shadow:2px 2px 8px rgba(0,0,0,.8)}
+.hero-title span{color:var(--red)}
+.hero-meta{display:flex;align-items:center;gap:12px;font-size:.9rem;flex-wrap:wrap}
+.hero-meta .match{color:#46d369;font-weight:700}
+.hero-meta .muted{color:var(--muted)}
+.hero-meta .hd-badge{border:1px solid var(--muted);padding:1px 5px;font-size:.7rem;border-radius:2px;color:var(--muted)}
+.hero-desc{font-size:1rem;line-height:1.5;color:#e0e0e0;max-width:520px}
+.hero-buttons{display:flex;gap:12px}
+.btn-play{display:flex;align-items:center;gap:8px;background:#fff;color:#000;border:none;padding:10px 28px;border-radius:4px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-play:hover{background:rgba(255,255,255,.8)}
+.btn-info{display:flex;align-items:center;gap:8px;background:rgba(109,109,110,.7);color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-info:hover{background:rgba(109,109,110,.5)}
+.hero-age{z-index:2;position:absolute;bottom:110px;right:4%;border-left:3px solid #fff;padding-left:8px;font-size:.9rem}
+
+/* ROWS */
+.rows-section{position:relative;z-index:1;margin-top:-80px;padding-bottom:60px}
+.row{margin-bottom:40px}
+.row-title{font-size:1.1rem;font-weight:700;margin-bottom:10px;padding:0 4%;display:inline-flex;align-items:center;gap:8px;cursor:default}
+.row-title .explore{font-size:.75rem;color:#54b9c5;opacity:0;transition:opacity .3s;cursor:pointer}
+.row:hover .row-title .explore{opacity:1}
+.row-track-wrapper{position:relative;padding:0 4%}
+.row-track{display:flex;gap:6px;overflow-x:auto;overflow-y:visible;scroll-behavior:smooth;scrollbar-width:none;padding:12px 0 130px;margin-bottom:-118px}
+.row-track::-webkit-scrollbar{display:none}
+.row-arrow{position:absolute;top:40%;transform:translateY(-50%);width:40px;height:70px;background:rgba(20,20,20,.8);border:none;color:#fff;font-size:1.6rem;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;border-radius:4px}
+.row-track-wrapper:hover .row-arrow{opacity:1}
+.row-arrow.left{left:0}
+.row-arrow.right{right:0}
+
+/* CARD */
+.card{flex-shrink:0;width:220px;border-radius:4px;position:relative;cursor:pointer;transition:transform .3s;z-index:1}
+.card:hover{transform:scale(1.08);z-index:300}
+.card:first-child:hover{transform-origin:left center}
+.card:last-child:hover{transform-origin:right center}
+.card-thumb{width:100%;aspect-ratio:16/9;border-radius:4px;overflow:hidden}
+.card-thumb-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center;padding:10px;background-size:cover;background-position:center}
+.card-thumb-icon{font-size:2rem}
+.card-thumb-label{font-size:.72rem;line-height:1.3;text-shadow:1px 1px 3px rgba(0,0,0,.9);font-weight:700}
+.card-expand{position:absolute;top:100%;left:0;right:0;background:#1a1a1a;border-radius:0 0 4px 4px;padding:12px;opacity:0;pointer-events:none;transition:opacity .2s ease .1s;box-shadow:0 12px 30px rgba(0,0,0,.95);z-index:400}
+.card:hover .card-expand{opacity:1;pointer-events:auto}
+.card-expand-actions{display:flex;gap:6px;margin-bottom:8px}
+.card-btn{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:transparent;color:#fff;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s}
+.card-btn:hover{border-color:#fff;background:rgba(255,255,255,.1)}
+.card-btn.play{background:#fff;color:#000;border-color:#fff}
+.card-btn.play:hover{background:#ccc}
+.card-btn.ml{margin-left:auto}
+.card-expand-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.tag{font-size:.65rem;padding:2px 6px;border-radius:2px;background:rgba(255,255,255,.12);color:#ccc}
+.tag.match{background:rgba(70,211,105,.2);color:#46d369;font-weight:700}
+.tag.new{background:rgba(229,9,20,.3);color:#ff6b6b;font-weight:700}
+.card-expand-title{font-size:.8rem;font-weight:700;margin-bottom:4px}
+.card-expand-desc{font-size:.68rem;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.progress-bar-wrap{height:3px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:6px;overflow:hidden}
+.progress-bar{height:100%;background:var(--red);border-radius:2px}
+
+/* TOP10 */
+.top10-card{display:flex;align-items:center;flex-shrink:0}
+.top10-number{font-size:7rem;font-weight:900;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.6);line-height:1;margin-right:-18px;z-index:2;user-select:none}
+
+/* GENRE TABS */
+.genre-tabs{display:flex;gap:8px;padding:0 4%;margin-bottom:20px;flex-wrap:wrap}
+.genre-tab{padding:4px 14px;border-radius:3px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;font-size:.82rem;cursor:pointer;transition:background .2s}
+.genre-tab:hover,.genre-tab.active{background:#fff;color:#000;border-color:#fff}
+
+/* EMPRESAS ROW — cards largos */
+.empresa-card{flex-shrink:0;width:280px;border-radius:6px;overflow:visible;cursor:pointer;position:relative;z-index:1;transition:transform .3s}
+.empresa-card:hover{transform:scale(1.05);z-index:300}
+.empresa-card:first-child:hover{transform-origin:left center}
+.empresa-card:last-child:hover{transform-origin:right center}
+.empresa-thumb{width:100%;height:130px;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;padding:14px;text-align:center}
+.empresa-logo{font-size:2.2rem}
+.empresa-name{font-size:.9rem;font-weight:800;letter-spacing:.5px}
+.empresa-tagline{font-size:.68rem;color:rgba(255,255,255,.75);line-height:1.3}
+.empresa-expand{position:absolute;top:100%;left:0;right:0;background:#1a1a1a;border-radius:0 0 6px 6px;padding:12px;opacity:0;pointer-events:none;transition:opacity .2s ease .1s;box-shadow:0 12px 30px rgba(0,0,0,.95);z-index:400}
+.empresa-card:hover .empresa-expand{opacity:1;pointer-events:auto}
+.empresa-expand-actions{display:flex;gap:6px;margin-bottom:8px}
+.empresa-expand-title{font-size:.8rem;font-weight:700;margin-bottom:4px;color:#fff}
+.empresa-expand-desc{font-size:.68rem;color:var(--muted);line-height:1.4}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:#181818;border-radius:8px;width:100%;max-width:860px;overflow:hidden;position:relative;transform:scale(.92);transition:transform .3s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-hero{position:relative;width:100%;aspect-ratio:16/7;display:flex;align-items:flex-end;padding:30px}
+.modal-hero-bg{position:absolute;inset:0}
+.modal-hero-grad{position:absolute;inset:0;background:linear-gradient(to top,#181818 0%,transparent 60%),linear-gradient(to right,rgba(0,0,0,.6),transparent)}
+.modal-hero-content{position:relative;z-index:1;flex:1}
+.modal-title{font-size:2rem;font-weight:900;margin-bottom:14px;line-height:1.1}
+.modal-buttons{display:flex;gap:10px;flex-wrap:wrap}
+.modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(40,40,40,.9);border:2px solid rgba(255,255,255,.3);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background .2s}
+.modal-close:hover{background:rgba(80,80,80,.9)}
+.modal-body{padding:0 30px 40px}
+.modal-meta{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.modal-meta .match{color:#46d369;font-weight:700}
+.modal-meta .muted{color:var(--muted);font-size:.9rem}
+.modal-meta .hd{border:1px solid #777;padding:1px 5px;font-size:.7rem;border-radius:2px;color:#aaa}
+.modal-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;margin-top:20px}
+.modal-desc{font-size:.9rem;line-height:1.7;color:#ddd;margin-bottom:16px}
+.modal-stitle{font-size:1rem;font-weight:700;margin:20px 0 10px}
+.modal-tools{display:flex;flex-direction:column;gap:8px}
+.modal-tool-item{background:rgba(255,255,255,.06);border-radius:4px;padding:10px 14px;font-size:.82rem;line-height:1.4;border-left:3px solid var(--red)}
+.modal-tool-item strong{color:#fff;display:block;margin-bottom:2px}
+.modal-tool-item span{color:#aaa}
+.modal-case{background:rgba(255,255,255,.04);border-radius:6px;padding:14px;font-size:.82rem;line-height:1.6;color:#bbb;border-left:3px solid #46d369}
+.modal-case strong{color:#46d369;display:block;margin-bottom:6px;font-size:.9rem}
+.modal-sidebar-label{font-size:.8rem;color:var(--muted);margin-bottom:4px}
+.modal-tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.modal-tag{background:rgba(255,255,255,.1);padding:3px 10px;border-radius:3px;font-size:.75rem;color:#ccc}
+.modal-articles{margin-top:20px}
+.article-item{display:flex;gap:14px;padding:14px 10px;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;transition:background .2s;border-radius:6px;align-items:flex-start}
+.article-item:hover{background:rgba(255,255,255,.05)}
+.article-item:last-child{border-bottom:none}
+.article-num{color:var(--muted);font-size:1rem;min-width:24px;text-align:center;padding-top:3px;flex-shrink:0}
+.article-icon{width:42px;height:42px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:rgba(255,255,255,.07)}
+.article-info{flex:1;min-width:0}
+.article-title{font-size:.88rem;font-weight:600;margin-bottom:4px;color:#fff;line-height:1.3}
+.article-desc{font-size:.75rem;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.article-rt{font-size:.68rem;color:#777;margin-top:6px}
+
+/* ARTICLE READER */
+.article-reader{display:none;position:fixed;inset:0;z-index:3000;background:#0e0e0e;overflow-y:auto}
+.article-reader.open{display:block}
+.ar-inner{max-width:760px;margin:0 auto;padding:40px 24px 80px}
+.ar-back{display:inline-flex;align-items:center;gap:8px;background:transparent;border:1px solid rgba(255,255,255,.15);color:#aaa;padding:8px 18px;border-radius:4px;font-size:.85rem;cursor:pointer;margin-bottom:32px;transition:color .2s,border-color .2s}
+.ar-back:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.ar-tag{font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+.ar-title{font-size:clamp(1.5rem,4vw,2.3rem);font-weight:800;font-family:Georgia,serif;line-height:1.2;margin-bottom:16px}
+.ar-meta{display:flex;align-items:center;gap:12px;margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.ar-meta .rt{color:var(--muted);font-size:.9rem}
+.ar-badge{background:rgba(229,9,20,.15);color:var(--red);font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:3px}
+.ar-body p{font-size:1.05rem;line-height:1.9;color:#ccc;font-family:Georgia,serif;margin-bottom:26px}
+.ar-body p:first-child::first-letter{font-size:3.4em;font-weight:900;float:left;line-height:.72;margin:6px 10px 0 0;color:var(--red)}
+.ar-nav{display:flex;align-items:center;justify-content:space-between;margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08)}
+.ar-nav-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#ccc;padding:10px 22px;border-radius:4px;font-size:.9rem;cursor:pointer;transition:background .2s}
+.ar-nav-btn:hover:not(:disabled){background:rgba(255,255,255,.12);color:#fff}
+.ar-nav-btn:disabled{opacity:.25;cursor:default}
+.ar-counter{color:var(--muted);font-size:.85rem}
+
+/* FOOTER */
+footer{padding:48px 4% 60px;border-top:1px solid rgba(255,255,255,.1);margin-top:40px}
+.footer-logo{font-size:1.5rem;font-weight:900;color:var(--red);display:block;margin-bottom:20px}
+.footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-bottom:32px}
+.footer-col h4{font-size:.85rem;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:.5px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.footer-col ul li a{color:var(--muted);text-decoration:none;font-size:.8rem;cursor:pointer;transition:color .2s}
+.footer-col ul li a:hover{color:#fff}
+.footer-copy{font-size:.75rem;color:#555;border-top:1px solid rgba(255,255,255,.06);padding-top:20px}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0a0a0a}
+::-webkit-scrollbar-thumb{background:#444;border-radius:3px}
+
+@media(max-width:768px){
+  .navbar-links{display:none}
+  .hero{min-height:75vh;padding:80px 0 60px}
+  .hero-desc{display:none}
+  .card{width:140px}
+  .card-expand{display:none}
+  .empresa-card{width:200px}
+  .empresa-expand{display:none}
+  .top10-number{font-size:5rem}
+  .modal-overlay{padding:0;align-items:flex-end}
+  .modal{border-radius:12px 12px 0 0;max-height:90vh;overflow-y:auto}
+  .modal-grid{grid-template-columns:1fr}
+  .modal-body{padding:16px}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <span class="navbar-logo">ProductFlix</span>
+  <ul class="navbar-links">
+    <li><a class="active">Início</a></li>
+    <li><a onclick="scrollTo('section-categories')">Navegar por Assunto</a></li>
+    <li><a onclick="scrollTo('section-empresas')">Empresas Referência</a></li>
+  </ul>
+  <div class="navbar-right">
+    <span style="cursor:pointer">🔍</span>
+    <span style="cursor:pointer">🔔</span>
+    <div class="navbar-avatar">PO</div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-badge">
+    <div class="hero-rank">📖 ProductFlix Original · #1 em Produto Hoje</div>
+    <h1 class="hero-title">Discovery:<br><span>A Arte de Fazer<br>as Perguntas Certas</span></h1>
+    <div class="hero-meta">
+      <span class="match">98% relevante</span>
+      <span class="muted">2024</span>
+      <span class="hd-badge">HD</span>
+      <span class="muted">5 artigos · 58 min leitura</span>
+    </div>
+    <p class="hero-desc">Antes de construir qualquer coisa, descubra se vale a pena construir. Times fortes economizam meses aqui. Uma série sobre como entender problemas reais antes de sair codando.</p>
+    <div class="hero-buttons">
+      <button class="btn-play" onclick="openModal('discovery')">📖 Ler Artigo</button>
+      <button class="btn-info" onclick="openModal('discovery')">ℹ Mais Informações</button>
+    </div>
+  </div>
+  <div class="hero-age">PO+</div>
+</section>
+
+<section class="rows-section">
+
+  <!-- Continuar -->
+  <div class="row">
+    <h2 class="row-title">Continuar de onde parou <span class="explore">Explorar tudo ›</span></h2>
+    <div class="row-track-wrapper">
+      <button class="row-arrow left" onclick="scrollRow(this,-1)">‹</button>
+      <div class="row-track">
+        <div class="card" onclick="openModal('fundamentos')">
+          <div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(20,30,48,.7),rgba(20,30,48,.7)),url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80') center/cover"><span class="card-thumb-icon">🧩</span><span class="card-thumb-label">Fundamentos do PO</span></div></div>
+          <div class="progress-bar-wrap"><div class="progress-bar" style="width:72%"></div></div>
+          <div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('fundamentos')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'fundamentos')">+</button><button class="card-btn" onclick="event.stopPropagation();markUseful(this,'fundamentos')">👍</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('fundamentos')">⏄</button></div><div class="card-expand-tags"><span class="tag match">97%</span><span class="tag new">Essencial</span></div><div class="card-expand-title">Fundamentos do PO</div><div class="card-expand-desc">Entenda o papel do PO e por que alguns aceleram negócios enquanto outros apenas organizam cards.</div></div>
+        </div>
+        <div class="card" onclick="openModal('backlog')">
+          <div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(45,27,105,.7),rgba(45,27,105,.7)),url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80') center/cover"><span class="card-thumb-icon">📚</span><span class="card-thumb-label">Backlog</span></div></div>
+          <div class="progress-bar-wrap"><div class="progress-bar" style="width:45%"></div></div>
+          <div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('backlog')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'backlog')">+</button><button class="card-btn" onclick="event.stopPropagation();markUseful(this,'backlog')">👍</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('backlog')">⏄</button></div><div class="card-expand-tags"><span class="tag match">95%</span><span class="tag">Priorização</span></div><div class="card-expand-title">Backlog</div><div class="card-expand-desc">Um backlog forte reduz caos e ajuda o time a construir o que realmente importa.</div></div>
+        </div>
+        <div class="card" onclick="openModal('metricas')">
+          <div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,90,10,.72),rgba(160,90,10,.72)),url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80') center/cover"><span class="card-thumb-icon">📈</span><span class="card-thumb-label">Métricas</span></div></div>
+          <div class="progress-bar-wrap"><div class="progress-bar" style="width:20%"></div></div>
+          <div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('metricas')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'metricas')">+</button><button class="card-btn" onclick="event.stopPropagation();markUseful(this,'metricas')">👍</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('metricas')">⏄</button></div><div class="card-expand-tags"><span class="tag match">99%</span><span class="tag">Dados</span></div><div class="card-expand-title">Métricas</div><div class="card-expand-desc">Bons POs não defendem opinião. Defendem decisões baseadas em evidência.</div></div>
+        </div>
+      </div>
+      <button class="row-arrow right" onclick="scrollRow(this,1)">›</button>
+    </div>
+  </div>
+
+  <!-- Top 10 -->
+  <div class="row">
+    <h2 class="row-title">Top 10 no Brasil Hoje <span class="explore">Explorar tudo ›</span></h2>
+    <div class="row-track-wrapper">
+      <button class="row-arrow left" onclick="scrollRow(this,-1)">‹</button>
+      <div class="row-track">
+        <div class="top10-card"><span class="top10-number">1</span><div class="card" onclick="openModal('discovery')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(20,30,48,.7),rgba(20,30,48,.7)),url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80') center/cover"><span class="card-thumb-icon">🔍</span><span class="card-thumb-label">Discovery</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('discovery')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'discovery')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('discovery')">⏄</button></div><div class="card-expand-tags"><span class="tag match">98%</span><span class="tag new">#1</span></div><div class="card-expand-title">Discovery</div><div class="card-expand-desc">Antes de construir, descubra se vale a pena construir.</div></div></div></div>
+        <div class="top10-card"><span class="top10-number">2</span><div class="card" onclick="openModal('ia')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(15,12,41,.78),rgba(15,12,41,.78)),url('https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80') center/cover"><span class="card-thumb-icon">🤖</span><span class="card-thumb-label">IA para PO</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('ia')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'ia')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('ia')">⏄</button></div><div class="card-expand-tags"><span class="tag match">96%</span><span class="tag new">Tendência</span></div><div class="card-expand-title">IA para PO</div><div class="card-expand-desc">O PO que domina IA trabalha mais rápido e entrega acima da média.</div></div></div></div>
+        <div class="top10-card"><span class="top10-number">3</span><div class="card" onclick="openModal('carreira')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,100,10,.72),rgba(160,100,10,.72)),url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&q=80') center/cover"><span class="card-thumb-icon">🚀</span><span class="card-thumb-label">Carreira</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('carreira')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'carreira')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('carreira')">⏄</button></div><div class="card-expand-tags"><span class="tag match">94%</span></div><div class="card-expand-title">Carreira</div><div class="card-expand-desc">POs valorizados crescem por impacto, consistência e visão.</div></div></div></div>
+        <div class="top10-card"><span class="top10-number">4</span><div class="card" onclick="openModal('situacoes')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,20,20,.72),rgba(160,20,20,.72)),url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&q=80') center/cover"><span class="card-thumb-icon">🧨</span><span class="card-thumb-label">Situações Reais</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('situacoes')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'situacoes')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('situacoes')">⏄</button></div><div class="card-expand-tags"><span class="tag match">97%</span></div><div class="card-expand-title">Situações Reais</div><div class="card-expand-desc">Cenários do mundo real para POs agirem com maturidade.</div></div></div></div>
+        <div class="top10-card"><span class="top10-number">5</span><div class="card" onclick="openModal('stakeholders')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(19,78,94,.7),rgba(19,78,94,.7)),url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80') center/cover"><span class="card-thumb-icon">👥</span><span class="card-thumb-label">Stakeholders</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('stakeholders')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'stakeholders')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('stakeholders')">⏄</button></div><div class="card-expand-tags"><span class="tag match">93%</span></div><div class="card-expand-title">Stakeholders</div><div class="card-expand-desc">Produto não cresce sozinho. Saber lidar com stakeholders é central.</div></div></div></div>
+      </div>
+      <button class="row-arrow right" onclick="scrollRow(this,1)">›</button>
+    </div>
+  </div>
+
+  <!-- Originals -->
+  <div class="row">
+    <h2 class="row-title">ProductFlix Originals <span class="explore">Explorar tudo ›</span></h2>
+    <div class="row-track-wrapper">
+      <button class="row-arrow left" onclick="scrollRow(this,-1)">‹</button>
+      <div class="row-track">
+        <div class="card" onclick="openModal('fundamentos')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(15,52,96,.7),rgba(15,52,96,.7)),url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80') center/cover"><span class="card-thumb-icon">🧩</span><span class="card-thumb-label">Fundamentos do PO</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('fundamentos')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'fundamentos')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('fundamentos')">⏄</button></div><div class="card-expand-tags"><span class="tag match">97%</span><span class="tag">S01</span></div><div class="card-expand-title">Fundamentos</div><div class="card-expand-desc">O papel real do PO: conectar negócio, usuário e tecnologia.</div></div></div>
+        <div class="card" onclick="openModal('cargos')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(55,59,68,.68),rgba(55,59,68,.68)),url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80') center/cover"><span class="card-thumb-icon">⚔️</span><span class="card-thumb-label">Diferença entre Cargos</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('cargos')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'cargos')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('cargos')">⏄</button></div><div class="card-expand-tags"><span class="tag match">92%</span><span class="tag">S02</span></div><div class="card-expand-title">PO vs PM vs SM vs UX</div><div class="card-expand-desc">Clareza de papéis acelera produto.</div></div></div>
+        <div class="card" onclick="openModal('scrum')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(31,64,55,.7),rgba(31,64,55,.7)),url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80') center/cover"><span class="card-thumb-icon">⚡</span><span class="card-thumb-label">Scrum e Ágil</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('scrum')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'scrum')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('scrum')">⏄</button></div><div class="card-expand-tags"><span class="tag match">91%</span><span class="tag">S03</span></div><div class="card-expand-title">Scrum e Ágil</div><div class="card-expand-desc">Framework ajuda execução, mas sem direção nenhuma cerimônia resolve.</div></div></div>
+        <div class="card" onclick="openModal('backlog')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(45,27,105,.7),rgba(45,27,105,.7)),url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80') center/cover"><span class="card-thumb-icon">📚</span><span class="card-thumb-label">Backlog</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('backlog')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'backlog')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('backlog')">⏄</button></div><div class="card-expand-tags"><span class="tag match">95%</span><span class="tag">S04</span></div><div class="card-expand-title">Backlog</div><div class="card-expand-desc">Prioridade real, não o que grita mais alto.</div></div></div>
+        <div class="card" onclick="openModal('discovery')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(20,30,48,.7),rgba(20,30,48,.7)),url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80') center/cover"><span class="card-thumb-icon">🔍</span><span class="card-thumb-label">Discovery</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('discovery')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'discovery')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('discovery')">⏄</button></div><div class="card-expand-tags"><span class="tag match">98%</span><span class="tag">S05</span></div><div class="card-expand-title">Discovery</div><div class="card-expand-desc">Entenda o problema antes de construir a solução.</div></div></div>
+        <div class="card" onclick="openModal('delivery')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(180,110,10,.72),rgba(180,110,10,.72)),url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80') center/cover"><span class="card-thumb-icon">🚀</span><span class="card-thumb-label">Delivery</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('delivery')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'delivery')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('delivery')">⏄</button></div><div class="card-expand-tags"><span class="tag match">93%</span><span class="tag">S06</span></div><div class="card-expand-title">Delivery</div><div class="card-expand-desc">Ideia boa sem execução vira nada.</div></div></div>
+        <div class="card" onclick="openModal('metricas')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,90,10,.72),rgba(160,90,10,.72)),url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80') center/cover"><span class="card-thumb-icon">📈</span><span class="card-thumb-label">Métricas</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('metricas')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'metricas')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('metricas')">⏄</button></div><div class="card-expand-tags"><span class="tag match">99%</span><span class="tag">S07</span></div><div class="card-expand-title">Métricas</div><div class="card-expand-desc">Decisões baseadas em evidência, não opinião.</div></div></div>
+        <div class="card" onclick="openModal('ia')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(15,12,41,.78),rgba(15,12,41,.78)),url('https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80') center/cover"><span class="card-thumb-icon">🤖</span><span class="card-thumb-label">IA para PO</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openModal('ia')">📖</button><button class="card-btn" onclick="event.stopPropagation();toggleWishlist(this,'ia')">+</button><button class="card-btn ml" onclick="event.stopPropagation();openModal('ia')">⏄</button></div><div class="card-expand-tags"><span class="tag match">96%</span><span class="tag new">Hot</span></div><div class="card-expand-title">IA para PO</div><div class="card-expand-desc">ChatGPT, Claude, Perplexity — o copiloto do PO moderno.</div></div></div>
+      </div>
+      <button class="row-arrow right" onclick="scrollRow(this,1)">›</button>
+    </div>
+  </div>
+
+  <!-- Navegar por Assunto -->
+  <div id="section-categories" style="scroll-margin-top:80px;margin-bottom:10px">
+    <h2 class="row-title" style="margin-bottom:12px">Navegar por Assunto</h2>
+    <div class="genre-tabs">
+      <button class="genre-tab active" onclick="filterCategory('all',this)">Todas</button>
+      <button class="genre-tab" onclick="filterCategory('execucao',this)">Execução</button>
+      <button class="genre-tab" onclick="filterCategory('estrategia',this)">Estratégia</button>
+      <button class="genre-tab" onclick="filterCategory('pessoas',this)">Pessoas</button>
+      <button class="genre-tab" onclick="filterCategory('dados',this)">Dados & Métricas</button>
+      <button class="genre-tab" onclick="filterCategory('tools',this)">Ferramentas & IA</button>
+      <button class="genre-tab" onclick="filterCategory('carreira',this)">Carreira</button>
+    </div>
+    <div class="row-track-wrapper">
+      <button class="row-arrow left" onclick="scrollRow(this,-1)">‹</button>
+      <div class="row-track" id="row-category">
+        <div class="card" data-cat="estrategia" onclick="openModal('fundamentos')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(15,52,96,.7),rgba(15,52,96,.7)),url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80') center/cover"><span class="card-thumb-icon">🧩</span><span class="card-thumb-label">Fundamentos</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Estratégia</span></div><div class="card-expand-title">Fundamentos</div><div class="card-expand-desc">O papel real do PO no produto moderno.</div></div></div>
+        <div class="card" data-cat="pessoas" onclick="openModal('cargos')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(55,59,68,.68),rgba(55,59,68,.68)),url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80') center/cover"><span class="card-thumb-icon">⚔️</span><span class="card-thumb-label">Cargos</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Pessoas</span></div><div class="card-expand-title">PO vs PM vs SM</div><div class="card-expand-desc">Limites e responsabilidades de cada papel.</div></div></div>
+        <div class="card" data-cat="execucao" onclick="openModal('scrum')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(31,64,55,.7),rgba(31,64,55,.7)),url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80') center/cover"><span class="card-thumb-icon">⚡</span><span class="card-thumb-label">Scrum</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Execução</span></div><div class="card-expand-title">Scrum e Ágil</div><div class="card-expand-desc">Cerimônias, sprints e agilidade real.</div></div></div>
+        <div class="card" data-cat="execucao" onclick="openModal('backlog')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(45,27,105,.7),rgba(45,27,105,.7)),url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80') center/cover"><span class="card-thumb-icon">📚</span><span class="card-thumb-label">Backlog</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Execução</span></div><div class="card-expand-title">Backlog</div><div class="card-expand-desc">Prioridade real, não o que grita mais alto.</div></div></div>
+        <div class="card" data-cat="estrategia" onclick="openModal('discovery')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(20,30,48,.7),rgba(20,30,48,.7)),url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80') center/cover"><span class="card-thumb-icon">🔍</span><span class="card-thumb-label">Discovery</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Estratégia</span></div><div class="card-expand-title">Discovery</div><div class="card-expand-desc">Entenda o problema antes de construir a solução.</div></div></div>
+        <div class="card" data-cat="execucao" onclick="openModal('delivery')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(180,110,10,.72),rgba(180,110,10,.72)),url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80') center/cover"><span class="card-thumb-icon">🚀</span><span class="card-thumb-label">Delivery</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Execução</span></div><div class="card-expand-title">Delivery</div><div class="card-expand-desc">Transformar prioridade em resultado real.</div></div></div>
+        <div class="card" data-cat="dados" onclick="openModal('metricas')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,90,10,.72),rgba(160,90,10,.72)),url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80') center/cover"><span class="card-thumb-icon">📈</span><span class="card-thumb-label">Métricas</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Dados</span></div><div class="card-expand-title">Métricas</div><div class="card-expand-desc">Decisões baseadas em evidência.</div></div></div>
+        <div class="card" data-cat="pessoas" onclick="openModal('stakeholders')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(19,78,94,.7),rgba(19,78,94,.7)),url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80') center/cover"><span class="card-thumb-icon">👥</span><span class="card-thumb-label">Stakeholders</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Pessoas</span></div><div class="card-expand-title">Stakeholders</div><div class="card-expand-desc">Criar confiança e manter todos na mesma direção.</div></div></div>
+        <div class="card" data-cat="tools" onclick="openModal('ferramentas')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(0,82,141,.7),rgba(0,82,141,.7)),url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80') center/cover"><span class="card-thumb-icon">🧰</span><span class="card-thumb-label">Ferramentas</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Tools</span></div><div class="card-expand-title">Ferramentas</div><div class="card-expand-desc">Stack certa para POs de alto impacto.</div></div></div>
+        <div class="card" data-cat="tools" onclick="openModal('ia')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(15,12,41,.78),rgba(15,12,41,.78)),url('https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80') center/cover"><span class="card-thumb-icon">🤖</span><span class="card-thumb-label">IA para PO</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">IA</span><span class="tag new">Hot</span></div><div class="card-expand-title">IA para PO</div><div class="card-expand-desc">ChatGPT, Claude, Perplexity — o copiloto do PO moderno.</div></div></div>
+        <div class="card" data-cat="pessoas" onclick="openModal('situacoes')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,20,20,.72),rgba(160,20,20,.72)),url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&q=80') center/cover"><span class="card-thumb-icon">🧨</span><span class="card-thumb-label">Situações Reais</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Pessoas</span></div><div class="card-expand-title">Situações Reais</div><div class="card-expand-desc">Cenários difíceis do dia a dia de um PO.</div></div></div>
+        <div class="card" data-cat="carreira" onclick="openModal('carreira')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(160,100,10,.72),rgba(160,100,10,.72)),url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&q=80') center/cover"><span class="card-thumb-icon">💼</span><span class="card-thumb-label">Carreira</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Carreira</span></div><div class="card-expand-title">Carreira</div><div class="card-expand-desc">De PO Júnior a Sênior — o caminho com impacto.</div></div></div>
+        <div class="card" data-cat="carreira" onclick="openModal('certificacoes')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(140,100,0,.72),rgba(140,100,0,.72)),url('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&q=80') center/cover"><span class="card-thumb-icon">🏆</span><span class="card-thumb-label">Certificações</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Carreira</span></div><div class="card-expand-title">Certificações</div><div class="card-expand-desc">PSPO I, CSPO, Product School — qual vale a pena?</div></div></div>
+        <div class="card" data-cat="dados" onclick="openModal('glossario')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(30,32,34,.76),rgba(30,32,34,.76)),url('https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&q=80') center/cover"><span class="card-thumb-icon">📖</span><span class="card-thumb-label">Glossário 400+</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Referência</span></div><div class="card-expand-title">Glossário</div><div class="card-expand-desc">Os 443 termos que todo PO precisa dominar.</div></div></div>
+        <div class="card" data-cat="execucao" onclick="openModal('templates')"><div class="card-thumb"><div class="card-thumb-inner" style="background:linear-gradient(rgba(122,35,206,.7),rgba(122,35,206,.7)),url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&q=80') center/cover"><span class="card-thumb-icon">📋</span><span class="card-thumb-label">Templates</span></div></div><div class="card-expand"><div class="card-expand-actions"><button class="card-btn play">📖</button><button class="card-btn">+</button><button class="card-btn ml">⌄</button></div><div class="card-expand-tags"><span class="tag">Execução</span></div><div class="card-expand-title">Templates</div><div class="card-expand-desc">6 modelos prontos para usar hoje.</div></div></div>
+      </div>
+      <button class="row-arrow right" onclick="scrollRow(this,1)">›</button>
+    </div>
+  </div>
+
+  <!-- EMPRESAS REFERÊNCIA -->
+  <div id="section-empresas" style="scroll-margin-top:80px;margin-bottom:10px">
+    <h2 class="row-title" style="margin-bottom:4px">Empresas Referência em Produto <span class="explore">Ver todas ›</span></h2>
+    <p style="font-size:.82rem;color:var(--muted);padding:0 4%;margin-bottom:16px">Times que definiram como produto de excelência é feito — e o que você pode aprender com cada um.</p>
+    <div class="row-track-wrapper">
+      <button class="row-arrow left" onclick="scrollRow(this,-1)">‹</button>
+      <div class="row-track">
+
+        <div class="empresa-card" onclick="openEmpresa('spotify')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#1db954,#191414)">
+            <span class="empresa-logo">🎵</span>
+            <span class="empresa-name">Spotify</span>
+            <span class="empresa-tagline">O modelo de squads que o mundo copiou</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('spotify')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('spotify')">⏄</button></div>
+            <div class="empresa-expand-title">Spotify — Modelo de Squads</div>
+            <div class="empresa-expand-desc">Squads autônomos, Tribes, Chapters e Guilds. O framework que virou referência global em agilidade escalada.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('amazon')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#ff9900,#232f3e)">
+            <span class="empresa-logo">📦</span>
+            <span class="empresa-name">Amazon</span>
+            <span class="empresa-tagline">Working Backwards — o produto começa pelo cliente</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('amazon')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('amazon')">⏄</button></div>
+            <div class="empresa-expand-title">Amazon — Working Backwards</div>
+            <div class="empresa-expand-desc">PR/FAQ antes de qualquer linha de código. Two-pizza teams. Liderança pelo cliente. A cultura de produto mais influente do planeta.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('netflix')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#e50914,#221f1f)">
+            <span class="empresa-logo">🎬</span>
+            <span class="empresa-name">Netflix</span>
+            <span class="empresa-tagline">4.000 deploys por dia e cultura de liberdade</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('netflix')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('netflix')">⏄</button></div>
+            <div class="empresa-expand-title">Netflix — Cultura e Delivery</div>
+            <div class="empresa-expand-desc">Freedom & Responsibility, CI/CD extremo, Feature Flags e Chaos Engineering. O benchmark de delivery e cultura de produto contínuo.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('airbnb')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#ff5a5f,#484848)">
+            <span class="empresa-logo">🏠</span>
+            <span class="empresa-name">Airbnb</span>
+            <span class="empresa-tagline">Discovery manual que salvou bilhões</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('airbnb')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('airbnb')">⏄</button></div>
+            <div class="empresa-expand-title">Airbnb — Discovery e Experiência</div>
+            <div class="empresa-expand-desc">Fundadores foram a campo fotografar apartamentos. A maior lição: contato direto com o usuário supera qualquer análise de dados isolada.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('nubank')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#820ad1,#1c1c1e)">
+            <span class="empresa-logo">💜</span>
+            <span class="empresa-name">Nubank</span>
+            <span class="empresa-tagline">90M de clientes com produto centrado no usuário</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('nubank')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('nubank')">⏄</button></div>
+            <div class="empresa-expand-title">Nubank — Produto e Transparência</div>
+            <div class="empresa-expand-desc">Product Review quinzenal com C-levels, dados ao invés de opinião. O modelo de produto do maior banco digital do mundo.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('google')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#4285f4,#0f9d58,#f4b400,#db4437)">
+            <span class="empresa-logo">🔵</span>
+            <span class="empresa-name">Google</span>
+            <span class="empresa-tagline">OKRs, Design Sprints e escala de produto</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('google')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('google')">⏄</button></div>
+            <div class="empresa-expand-title">Google — OKRs e Escala</div>
+            <div class="empresa-expand-desc">OKRs inventados aqui em 1999, Design Doc antes de qualquer projeto, 20% time para inovação. Referência em governança de produto com escala.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('intercom')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#1f8dd6,#0a2a4a)">
+            <span class="empresa-logo">💬</span>
+            <span class="empresa-name">Intercom</span>
+            <span class="empresa-tagline">Criadores do RICE e do Shape Up moderno</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('intercom')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('intercom')">⏄</button></div>
+            <div class="empresa-expand-title">Intercom — Priorização e Foco</div>
+            <div class="empresa-expand-desc">Criadores do RICE Score. Backlog reduzido em 60%, features com 3x mais impacto. Referência em como dizer não com dados.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('duolingo')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#58cc02,#1cb0f6)">
+            <span class="empresa-logo">🦉</span>
+            <span class="empresa-name">Duolingo</span>
+            <span class="empresa-tagline">North Star que 16x o DAU com uma métrica</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('duolingo')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('duolingo')">⏄</button></div>
+            <div class="empresa-expand-title">Duolingo — North Star e Retenção</div>
+            <div class="empresa-expand-desc">DAL (Daily Active Learning) como única North Star. Streak nasceu da análise de retenção. De 5M para 80M de DAUs.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('linear')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#5e6ad2,#1a1a2e)">
+            <span class="empresa-logo">⚡</span>
+            <span class="empresa-name">Linear</span>
+            <span class="empresa-tagline">O novo padrão de ferramentas para times de produto</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('linear')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('linear')">⏄</button></div>
+            <div class="empresa-expand-title">Linear — Velocidade e Foco</div>
+            <div class="empresa-expand-desc">Produto construído para times que odeiam burocracia. Adotado por Vercel, Loom e Raycast. A nova referência de tooling para POs modernos.</div>
+          </div>
+        </div>
+
+        <div class="empresa-card" onclick="openEmpresa('figma')">
+          <div class="empresa-thumb" style="background:linear-gradient(135deg,#f24e1e,#ff7262,#a259ff,#1abcfe,#0acf83)">
+            <span class="empresa-logo">🎨</span>
+            <span class="empresa-name">Figma</span>
+            <span class="empresa-tagline">Colaboração em tempo real que virou padrão global</span>
+          </div>
+          <div class="empresa-expand">
+            <div class="empresa-expand-actions"><button class="card-btn play" onclick="event.stopPropagation();openEmpresa('figma')">📖</button><button class="card-btn ml" onclick="event.stopPropagation();openEmpresa('figma')">⏄</button></div>
+            <div class="empresa-expand-title">Figma — Design e Colaboração</div>
+            <div class="empresa-expand-desc">Transformou o processo de design em produto colaborativo. POs usam Figma para validar fluxos antes do desenvolvimento. Adotado por Microsoft, Twitter e Uber.</div>
+          </div>
+        </div>
+
+      </div>
+      <button class="row-arrow right" onclick="scrollRow(this,1)">›</button>
+    </div>
+  </div>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">ProductFlix</span>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>Aprender</h4>
+      <ul>
+        <li><a onclick="openModal('fundamentos')">Fundamentos do PO</a></li>
+        <li><a onclick="openModal('discovery')">Discovery</a></li>
+        <li><a onclick="openModal('backlog')">Backlog & Priorização</a></li>
+        <li><a onclick="openModal('metricas')">Métricas</a></li>
+        <li><a onclick="openModal('delivery')">Delivery</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Avançar</h4>
+      <ul>
+        <li><a onclick="openModal('carreira')">Carreira de PO</a></li>
+        <li><a onclick="openModal('certificacoes')">Certificações</a></li>
+        <li><a onclick="openModal('ia')">IA para PO</a></li>
+        <li><a onclick="openModal('ferramentas')">Ferramentas</a></li>
+        <li><a onclick="openModal('templates')">Templates Prontos</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Empresas Referência</h4>
+      <ul>
+        <li><a onclick="openEmpresa('spotify')">Spotify — Modelo de Squads</a></li>
+        <li><a onclick="openEmpresa('amazon')">Amazon — Working Backwards</a></li>
+        <li><a onclick="openEmpresa('netflix')">Netflix — Cultura de Produto</a></li>
+        <li><a onclick="openEmpresa('nubank')">Nubank — Produto BR</a></li>
+        <li><a onclick="openEmpresa('google')">Google — OKRs e Escala</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Explorar</h4>
+      <ul>
+        <li><a onclick="openModal('situacoes')">Situações Reais</a></li>
+        <li><a onclick="openModal('stakeholders')">Stakeholders</a></li>
+        <li><a onclick="openModal('scrum')">Scrum e Ágil</a></li>
+        <li><a onclick="openModal('cargos')">Diferença entre Cargos</a></li>
+        <li><a onclick="openModal('glossario')">Glossário 443 Termos</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="footer-copy">© 2025 ProductFlix · Portal educacional para Product Owners · Todos os conteúdos são para uso pessoal e profissional</p>
+</footer>
+
+<!-- MODAL SEÇÕES -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-hero">
+      <div class="modal-hero-bg" id="modal-hero-bg"></div>
+      <div class="modal-hero-grad"></div>
+      <div class="modal-hero-content">
+        <h2 class="modal-title" id="modal-title"></h2>
+        <div class="modal-buttons">
+          <button class="btn-play" id="modal-read-btn">📖 Ler Artigo</button>
+          <button class="btn-info" id="modal-wishlist-btn" onclick="toggleModalWishlist()" style="background:rgba(109,109,110,.5)">+ Minha Lista</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta">
+        <span class="match" id="modal-match"></span>
+        <span class="muted" id="modal-year">2024</span>
+        <span class="hd">HD</span>
+        <span class="muted" id="modal-duration"></span>
+      </div>
+      <div class="modal-grid">
+        <div>
+          <p class="modal-desc" id="modal-desc"></p>
+          <div class="modal-stitle">🛠️ Ferramentas & Métodos</div>
+          <div class="modal-tools" id="modal-tools"></div>
+          <div class="modal-stitle">📄 Artigos desta Seção</div>
+          <div class="modal-articles" id="modal-episodes"></div>
+        </div>
+        <div>
+          <div class="modal-stitle">🏆 Case de Sucesso</div>
+          <div class="modal-case" id="modal-case"></div>
+          <br>
+          <div class="modal-sidebar-label">Categorias: <span id="modal-cats"></span></div>
+          <div class="modal-tag-list" id="modal-tags"></div>
+          <div class="modal-sidebar-label" style="margin-top:8px">Mindset:</div>
+          <div style="font-size:.8rem;color:#aaa;font-style:italic;margin-top:4px" id="modal-mindset"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMPRESAS -->
+<div class="modal-overlay" id="empresa-overlay" onclick="closeEmpresaOutside(event)">
+  <div class="modal" id="empresa-modal">
+    <button class="modal-close" onclick="closeEmpresa()">✕</button>
+    <div class="modal-hero">
+      <div class="modal-hero-bg" id="empresa-hero-bg"></div>
+      <div class="modal-hero-grad"></div>
+      <div class="modal-hero-content">
+        <h2 class="modal-title" id="empresa-title"></h2>
+        <div class="modal-buttons">
+          <button class="btn-play" id="empresa-read-btn">📖 Ver Case Completo</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta">
+        <span class="match" id="empresa-match"></span>
+        <span class="muted" id="empresa-setor"></span>
+        <span class="hd">CASE</span>
+      </div>
+      <div class="modal-grid">
+        <div>
+          <p class="modal-desc" id="empresa-desc"></p>
+          <div class="modal-stitle">🎯 O que o PO aprende com este time</div>
+          <div class="modal-tools" id="empresa-licoes"></div>
+          <div class="modal-stitle">📄 Práticas que viraram referência</div>
+          <div class="modal-articles" id="empresa-praticas"></div>
+        </div>
+        <div>
+          <div class="modal-stitle">🏆 Resultado de Produto</div>
+          <div class="modal-case" id="empresa-resultado"></div>
+          <br>
+          <div class="modal-sidebar-label">Setor:</div>
+          <div class="modal-tag-list" id="empresa-tags"></div>
+          <div class="modal-sidebar-label" style="margin-top:8px">Princípio Central:</div>
+          <div style="font-size:.8rem;color:#aaa;font-style:italic;margin-top:4px" id="empresa-principio"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE READER -->
+<div class="article-reader" id="article-reader">
+  <div class="ar-inner">
+    <button class="ar-back" onclick="closeArticleReader()">← Voltar para o módulo</button>
+    <div class="ar-tag" id="ar-section-tag"></div>
+    <h1 class="ar-title" id="ar-title"></h1>
+    <div class="ar-meta"><span class="rt" id="ar-readtime"></span><span class="ar-badge">Artigo</span></div>
+    <div class="ar-body" id="ar-body"></div>
+    <div class="ar-nav">
+      <button class="ar-nav-btn" id="ar-prev" onclick="navigateArticle(-1)">← Anterior</button>
+      <span class="ar-counter" id="ar-counter"></span>
+      <button class="ar-nav-btn" id="ar-next" onclick="navigateArticle(1)">Próximo →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA SEÇÕES ────────────────────────────────────────────────────
+const data={
+  fundamentos:{title:"Fundamentos do Product Owner",match:"97% relevante",duration:"Seção 01 · 5 artigos · ~54 min",bg:"linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)",icon:"🧩",desc:"Entenda o papel do PO e por que alguns aceleram negócios enquanto outros apenas organizam cards. O PO forte não gerencia tarefas — ele remove ruído, define direção e garante que o time construa o que move resultado.",tools:[{name:"Jobs To Be Done (JTBD)",desc:"Entenda o 'trabalho' que o cliente contrata o produto para fazer. Usado no Intercom e Basecamp."},{name:"Continuous Discovery Habits",desc:"Teresa Torres: entrevistas semanais com usuários como rotina. O método de discovery mais influente da última década."},{name:"Opportunity Solution Tree",desc:"Mapa visual que liga outcome a oportunidades e hipóteses. Evita o PO de virar uma 'feature factory'."}],case:{company:"Amazon — Working Backwards",text:"Jeff Bezos criou o PR/FAQ: antes de qualquer dev, o PO escreve o press release do produto pronto. Kindle, AWS e Prime nasceram desse processo. Resultado: clareza extrema antes de qualquer linha de código."},tags:["Estratégia","Iniciante","Papel do PO","Mindset"],mindset:"O PO forte não gerencia tarefas. Remove ruído, define direção e garante que o time construa o que realmente move resultado.",episodes:[{num:1,icon:"🧩",title:"O que faz um Product Owner?",desc:"Conecta negócio, usuário e tecnologia para entregar valor real.",duration:"12 min"},{num:2,icon:"🚫",title:"O que NÃO faz um PO",desc:"Não é gerente do squad, não aceita tudo, não apaga incêndio.",duration:"8 min"},{num:3,icon:"🎯",title:"Priorizar o que gera valor",desc:"PO não escolhe o que grita mais alto — escolhe o que move negócio.",duration:"15 min"},{num:4,icon:"🧠",title:"Entender problema antes da solução",desc:"Pedido pronto costuma esconder a dor real.",duration:"10 min"},{num:5,icon:"🕒",title:"Como é o dia de um PO forte",desc:"Daily, métricas, backlog, stakeholders, usuários, entregas.",duration:"9 min"}]},
+  cargos:{title:"Diferença entre Cargos",match:"92% relevante",duration:"Seção 02 · 4 artigos · ~38 min",bg:"linear-gradient(135deg,#373b44,#4286f4)",icon:"⚔️",desc:"PO, PM, SM, Tech Lead e UX — quando cada função entende sua missão, o time para de disputar espaço e começa a entregar valor.",tools:[{name:"RACI Matrix",desc:"Define quem é Responsável, Aprovador, Consultado e Informado."},{name:"Shape Up (Basecamp)",desc:"Redistribui responsabilidades entre Shaper (estratégia) e Builder (execução)."},{name:"Dual-Track Agile",desc:"Separa Discovery de Delivery. Define como PO e UX colaboram sem bloquear."}],case:{company:"Spotify — Modelo de Squads",text:"PO = 'o quê e por quê', SM = processo, Chapter Lead = pessoas. Com 600+ squads, o Spotify escalou globalmente sem perder agilidade."},tags:["Papéis","Organização","Times"],mindset:"Clareza de papéis acelera produto. Quando cada função entende sua missão, o time para de disputar espaço.",episodes:[{num:1,icon:"⚔️",title:"PO vs PM",desc:"PO domina execução; PM olha estratégia e mercado.",duration:"11 min"},{num:2,icon:"🔄",title:"PO vs Scrum Master",desc:"PO decide o que gera mais valor. SM melhora fluxo.",duration:"9 min"},{num:3,icon:"⚙️",title:"PO vs Tech Lead",desc:"PO define problema e impacto. Tech Lead define como construir.",duration:"10 min"},{num:4,icon:"🎨",title:"PO vs UX",desc:"PO prioriza valor e resultado. UX desenha experiências.",duration:"8 min"}]},
+  scrum:{title:"Scrum e Ágil",match:"91% relevante",duration:"Seção 03 · 4 artigos · ~40 min",bg:"linear-gradient(135deg,#1f4037,#99f2c8)",icon:"⚡",desc:"Entenda Scrum de forma prática, sem teoria vazia. Framework ajuda execução — mas sem direção, prioridade e valor, nenhuma cerimônia resolve.",tools:[{name:"Jira Software",desc:"Plataforma dominante para gestão de sprints e backlog. 65k+ empresas."},{name:"SAFe",desc:"Para escalar Scrum em grandes organizações. Adotado por Philips, LEGO e Boeing."},{name:"OKRs aplicados a Sprints",desc:"Conectar Sprint Goals diretamente aos OKRs trimestrais. Elimina sprints sem direção."}],case:{company:"ING Bank — Transformação ágil global",text:"Em 2015, reorganizou 3.500 colaboradores em squads autônomos com Scrum. Lançamento de produtos caiu de meses para semanas, engajamento subiu 19%."},tags:["Execução","Sprints","Cerimônias","Framework"],mindset:"Scrum não salva produto ruim. Framework ajuda execução. Sem direção, prioridade e valor, nenhuma cerimônia resolve.",episodes:[{num:1,icon:"🎯",title:"O que é Sprint?",desc:"Ciclo curto onde o time entrega algo valioso e utilizável.",duration:"10 min"},{num:2,icon:"📌",title:"Planning eficaz",desc:"Definir objetivo da sprint e o que será puxado.",duration:"12 min"},{num:3,icon:"⚡",title:"Daily eficiente",desc:"15 minutos que alinham sem cansar.",duration:"7 min"},{num:4,icon:"🔄",title:"Retrospectiva que funciona",desc:"Falar sem executar melhoria gera descrédito.",duration:"11 min"}]},
+  backlog:{title:"Backlog",match:"95% relevante",duration:"Seção 04 · 3 artigos · ~34 min",bg:"linear-gradient(135deg,#2d1b69,#11998e,#38ef7d)",icon:"📚",desc:"Um backlog forte reduz caos, acelera decisões e ajuda o time a construir o que realmente importa. Backlog não é cemitério de ideias — é uma ferramenta viva de decisão.",tools:[{name:"RICE Score",desc:"Reach × Impact × Confidence ÷ Effort. Framework do Intercom. Justifica prioridades objetivamente."},{name:"MoSCoW Method",desc:"Must Have, Should Have, Could Have, Won't Have. Para prazos fixos."},{name:"Story Mapping",desc:"Organiza backlog em jornada do usuário × nível de detalhe. Visualiza MVPs colaborativamente."}],case:{company:"Intercom — RICE que revolucionou priorização",text:"O Intercom criou o RICE ao perceber que priorizava pelo volume de pedidos. Backlog reduzido em 60%, features com 3x mais impacto. Adotado por Google, HubSpot e Dropbox."},tags:["Priorização","Execução","Gestão","RICE"],mindset:"Backlog não é cemitério de ideias. É uma ferramenta viva de decisão. Se tudo entra e nada sai, ele perde valor.",episodes:[{num:1,icon:"🎯",title:"O que é e para que serve",desc:"Lista priorizada de problemas, oportunidades e entregas futuras.",duration:"9 min"},{num:2,icon:"📈",title:"Como priorizar com RICE",desc:"Reach, Impact, Confidence, Effort — o framework do Intercom.",duration:"14 min"},{num:3,icon:"🚨",title:"Erros que destroem um backlog",desc:"Tudo prioridade máxima, itens vagos, feature sem problema.",duration:"11 min"}]},
+  discovery:{title:"Discovery: A Arte de Fazer as Perguntas Certas",match:"98% relevante",duration:"Seção 05 · 5 artigos · ~60 min",bg:"linear-gradient(135deg,#141e30,#243b55)",icon:"🔍",desc:"Antes de construir qualquer coisa, descubra se vale a pena construir. Times fortes economizam meses aqui. Discovery existe para matar ideias ruins cedo.",tools:[{name:"Design Sprint (Google Ventures)",desc:"5 dias para resolver problemas críticos e validar ideias com protótipos."},{name:"Continuous Discovery Habits",desc:"Entrevistas semanais + Opportunity Solution Tree. O método mais influente da última década."},{name:"Lean Startup / Build-Measure-Learn",desc:"Menor experimento possível → medir → aprender. Filosofia do Dropbox, Airbnb e GE."}],case:{company:"Airbnb — Discovery que salvou o negócio",text:"Em 2009, US$200/semana e quase falindo. Fundadores foram a campo fotografar apartamentos manualmente. A receita dobrou em uma semana. O maior aprendizado: usuário real supera análise de dados isolada."},tags:["Estratégia","Usuário","Validação","MVP"],mindset:"Discovery existe para matar ideias ruins cedo. Quanto antes você aprende que algo não funciona, mais dinheiro e tempo economiza.",episodes:[{num:1,icon:"🔍",title:"Entender problema antes de construir",desc:"O maior desperdício: construir a coisa errada com perfeição.",duration:"13 min"},{num:2,icon:"🎤",title:"Como entrevistar usuários reais",desc:"Perguntas que revelam dores reais — não validam suposições.",duration:"16 min"},{num:3,icon:"💡",title:"Criar e testar hipóteses rápido",desc:"Do problema ao experimento em horas, não semanas.",duration:"12 min"},{num:4,icon:"🧪",title:"MVP e protótipos de baixo custo",desc:"Validar sem escrever uma linha de código.",duration:"10 min"},{num:5,icon:"📊",title:"Dados que já existem no produto",desc:"Analytics e suporte já contam histórias valiosas.",duration:"9 min"}]},
+  delivery:{title:"Delivery",match:"93% relevante",duration:"Seção 06 · 3 artigos · ~33 min",bg:"linear-gradient(135deg,#b45309,#fbbf24)",icon:"🚀",desc:"Ideia boa sem execução vira nada. Delivery é transformar prioridade em resultado real.",tools:[{name:"CI/CD",desc:"Pipeline contínuo. Netflix faz 4.000 deploys por dia para 260M usuários."},{name:"Feature Flags",desc:"Liga/desliga funcionalidades sem deploy. Rollback instantâneo e testes A/B em produção."},{name:"DORA Metrics",desc:"Deploy Frequency, Lead Time, Change Failure Rate, MTTR. Conversa baseada em dados."}],case:{company:"Netflix — 4.000 deploys por dia",text:"CI/CD e Feature Flags para 260M de usuários. Em 2011, uma falha criou o Chaos Engineering — testar falhas intencionalmente em produção. Benchmark global de delivery contínuo."},tags:["Execução","Deploy","Qualidade","Velocidade"],mindset:"Squad rápido sem direção só erra mais rápido. O melhor delivery acontece quando prioridade clara encontra execução consistente.",episodes:[{num:1,icon:"📚",title:"Refinar backlog antes da sprint",desc:"Chegar com itens claros — não descobrir problemas na planning.",duration:"10 min"},{num:2,icon:"🧱",title:"Gerir riscos antes que virem atraso",desc:"Antecipar o problema vale mais que apagar incêndio.",duration:"12 min"},{num:3,icon:"📊",title:"Medir pós-release obrigatório",desc:"Entrega sem resultado medido é chute no escuro.",duration:"11 min"}]},
+  metricas:{title:"Métricas",match:"99% relevante",duration:"Seção 07 · 4 artigos · ~47 min",bg:"linear-gradient(135deg,#92400e,#f59e0b)",icon:"📈",desc:"Bons POs não defendem opinião. Defendem decisões baseadas em evidência. Feature entregue não significa sucesso.",tools:[{name:"North Star Metric",desc:"Uma métrica que captura valor ao usuário e prediz crescimento. Airbnb, Spotify, Facebook."},{name:"Amplitude / Mixpanel",desc:"Analytics comportamental para funis, retenção, cohorts e jornadas."},{name:"AARRR (Pirate Metrics)",desc:"Acquisition, Activation, Retention, Referral, Revenue. Identifica onde o produto perde usuários."}],case:{company:"Duolingo — North Star que 16x o DAU",text:"DAL (Daily Active Learning) como North Star. Streak nasceu da análise de retenção. De 5M para 80M de DAUs com retenção de 55% vs média da indústria de 10-15%."},tags:["Dados","KPIs","Resultado","Analytics"],mindset:"Se não mede resultado, você só lançou algo. Feature entregue não significa sucesso. O que importa é mudança real no comportamento.",episodes:[{num:1,icon:"📈",title:"North Star Metric",desc:"Uma métrica que alinha todo o time em torno de valor real.",duration:"14 min"},{num:2,icon:"🔁",title:"Retenção e Churn",desc:"Os indicadores que separam produtos saudáveis dos moribundos.",duration:"13 min"},{num:3,icon:"🚪",title:"Funis e conversão",desc:"Onde os usuários abandonam e por quê.",duration:"11 min"},{num:4,icon:"🎭",title:"Métricas de vaidade vs métricas reais",desc:"O número bonito que engana — e o que realmente importa.",duration:"9 min"}]},
+  stakeholders:{title:"Stakeholders",match:"93% relevante",duration:"Seção 08 · 3 artigos · ~35 min",bg:"linear-gradient(135deg,#134e5e,#71b280)",icon:"👥",desc:"Produto não cresce sozinho. Stakeholder quer confiança — transparência, contexto e consistência resolvem mais conflito do que dizer sim para tudo.",tools:[{name:"Stakeholder Map",desc:"Quadrante Poder × Interesse. Alto poder/alto interesse = gestão próxima."},{name:"Roadmap Now/Next/Later",desc:"Três horizontes sem datas fechadas. Alinha sem criar compromissos rígidos."},{name:"Executive One Pager",desc:"Uma página com contexto, problema, proposta e impacto. Padrão Google e Amazon."}],case:{company:"Nubank — Transparência radical",text:"Product Review quinzenal: POs apresentam resultados a C-levels com dados, não opiniões. Pilar do crescimento para 90M de clientes. Inspirou Mercado Pago e Neon."},tags:["Pessoas","Comunicação","Alinhamento","Confiança"],mindset:"Stakeholder quer confiança, não só resposta rápida. Transparência, contexto e consistência resolvem mais do que dizer sim para tudo.",episodes:[{num:1,icon:"🏢",title:"Quem são os stakeholders?",desc:"Diretoria, Comercial, Operação, Marketing, Suporte, Tech.",duration:"10 min"},{num:2,icon:"📢",title:"Como dizer não sem criar inimigos",desc:"A arte de priorizar sem destruir relacionamentos.",duration:"14 min"},{num:3,icon:"🌫️",title:"Transparência como escudo",desc:"Sem contexto, surge desconfiança. Com dados, surge respeito.",duration:"11 min"}]},
+  ferramentas:{title:"Ferramentas do Product Owner",match:"89% relevante",duration:"Seção 09 · 3 artigos · ~34 min",bg:"linear-gradient(135deg,#005c97,#363795)",icon:"🧰",desc:"O melhor PO usa ferramentas como alavanca. Nunca como muleta. Ferramenta boa em processo ruim só acelera bagunça.",tools:[{name:"Linear",desc:"Preferida por startups de alto crescimento: Vercel, Loom, Raycast. Interface rápida, roadmap visual nativo."},{name:"Notion",desc:"Workspace all-in-one para PRDs, roadmaps e decisões. 30M+ usuários."},{name:"Figma",desc:"Padrão de prototipação e alinhamento UX. Microsoft, Twitter, Uber."}],case:{company:"Slack — Stack que construiu cultura de produto",text:"Usou suas próprias ferramentas internamente antes de lançá-las. GitHub + Figma + Notion + Slack: de 0 a 8M DAUs — crescimento B2B mais rápido da história."},tags:["Ferramentas","Stack","Produtividade","Tech"],mindset:"Ferramenta boa em processo ruim só acelera bagunça. Primeiro organize o fluxo, depois escolha a tecnologia.",episodes:[{num:1,icon:"📌",title:"Jira vs Linear vs Azure DevOps",desc:"Quando usar cada um — e como não se perder neles.",duration:"13 min"},{num:2,icon:"📝",title:"Notion e Confluence para PRDs",desc:"Documentação viva que o time realmente usa.",duration:"10 min"},{num:3,icon:"📊",title:"Dashboards com Power BI e Looker",desc:"Métricas visíveis para todos os stakeholders.",duration:"11 min"}]},
+  templates:{title:"Templates Prontos para Usar",match:"90% relevante",duration:"Seção 10 · 6 artigos · ~48 min",bg:"linear-gradient(135deg,#8e2de2,#4a00e0)",icon:"📋",desc:"Modelos prontos para organizar pensamento, ganhar velocidade e parecer extremamente profissional. Quem pensa bem, escreve bem.",tools:[{name:"PRD",desc:"Product Requirements Document — especifica o que será construído, por quê e para quem."},{name:"Amazon PR/FAQ",desc:"Press release do produto pronto antes de qualquer desenvolvimento."},{name:"Notion Templates",desc:"Ecossistema de templates usados em Figma, Stripe e Coinbase."}],case:{company:"Google — Documentação que escala cultura",text:"Design Doc antes de qualquer projeto relevante. 100k+ engenheiros e PMs: qualquer pessoa entende uma decisão sem reuniões extras. OKRs do Google usados em 50%+ das Fortune 500."},tags:["Templates","Documentação","Agilidade","PRD"],mindset:"Quem pensa bem, escreve bem. Quem escreve bem, lidera melhor. Templates servem para acelerar clareza, decisão e execução.",episodes:[{num:1,icon:"🧩",title:"User Story",desc:"Como [usuário] quero [ação] para [benefício].",duration:"8 min"},{num:2,icon:"🔍",title:"Template de Discovery",desc:"Problema, hipótese, impacto, validação, métrica.",duration:"9 min"},{num:3,icon:"🗺️",title:"Template de Roadmap",desc:"Objetivo, iniciativas, prioridade, prazo, dependências.",duration:"8 min"},{num:4,icon:"🎯",title:"Template de Priorização",desc:"Item, impacto, esforço, urgência, risco, decisão.",duration:"7 min"},{num:5,icon:"🤝",title:"Template de Stakeholders",desc:"Tema, stakeholders, expectativas, riscos, comunicação.",duration:"8 min"},{num:6,icon:"📊",title:"Template de Métricas",desc:"Objetivo, KPI, meta, baseline, frequência, plano.",duration:"8 min"}]},
+  situacoes:{title:"Situações Reais",match:"97% relevante",duration:"Seção 11 · 6 artigos · ~58 min",bg:"linear-gradient(135deg,#e53935,#e35d5b)",icon:"🧨",desc:"Cenários comuns do mundo real para POs agirem com maturidade, clareza e estratégia. Clareza nos momentos difíceis é diferencial competitivo.",tools:[{name:"Pre-Mortem",desc:"O time imagina que o projeto já falhou e trabalha de trás para frente para identificar causas."},{name:"Five Whys (Toyota)",desc:"Perguntar 'por quê?' cinco vezes consecutivas até chegar à causa raiz."},{name:"SBI Feedback",desc:"Situation-Behavior-Impact: feedback difícil sem gerar defensividade."}],case:{company:"Uber — Gestão de crise como diferencial",text:"Em 2017: escândalo de cultura, investigação do DOJ, saída do CEO. O time de produto manteve entregas críticas com mais autonomia local. Uber Eats lançado globalmente durante o período mais turbulento da empresa."},tags:["Crise","Pressão","Decisão","Conflito"],mindset:"O valor do PO aparece nos momentos difíceis. Quando existe pressão, conflito ou caos, clareza vira diferencial competitivo.",episodes:[{num:1,icon:"🔥",title:"Stakeholder pede prioridade máxima",desc:"Como responder com dados sem criar inimigos.",duration:"12 min"},{num:2,icon:"📚",title:"Time reclama de backlog confuso",desc:"Menos volume. Mais clareza. Ação imediata.",duration:"10 min"},{num:3,icon:"⏰",title:"Sprint atrasada",desc:"Proteja o que gera valor. Corte o acessório.",duration:"11 min"},{num:4,icon:"😡",title:"Usuários reclamando muito",desc:"Sintoma não é causa. Investigue padrões primeiro.",duration:"13 min"},{num:5,icon:"📈",title:"Diretoria quer resultado rápido",desc:"Quick wins inteligentes com impacto visível.",duration:"10 min"},{num:6,icon:"⚔️",title:"Conflito negócio vs tecnologia",desc:"Debate bom vence ego. Fatos, riscos e opções.",duration:"12 min"}]},
+  ia:{title:"IA para Product Owners",match:"96% relevante",duration:"Seção 12 · 6 artigos · ~57 min",bg:"linear-gradient(135deg,#0f0c29,#302b63,#24243e)",icon:"🤖",desc:"O PO que domina IA trabalha mais rápido, pensa melhor e entrega acima da média. IA não substitui — ela amplia quem já pensa bem.",tools:[{name:"ChatGPT / GPT-4o",desc:"Modelo mais usado por POs para user stories, PRDs e análises. 100M+ usuários."},{name:"Claude",desc:"Janela de contexto extensa para análises longas, PRDs e comunicações executivas."},{name:"Prompt Engineering",desc:"Skill listada em vagas no Airbnb, Stripe e Linear. O diferencial do PO moderno."}],case:{company:"Klarna — IA que substituiu 700 agentes em 1 mês",text:"Em 2024, IA realizou o trabalho de 700 agentes resolvendo 2,3M de conversas. O time de produto usou IA no discovery — protótipos com prompts, iterando em horas."},tags:["IA","Automação","Produtividade","Futuro"],mindset:"IA não substitui Product Owner forte. Ela amplia quem já pensa bem. Quem decide melhor continua vencendo.",episodes:[{num:1,icon:"🤖",title:"ChatGPT para backlog e PRD",desc:"Prompts que transformam demandas vagas em histórias claras.",duration:"15 min"},{num:2,icon:"🧠",title:"Claude para análises profundas",desc:"Documentos longos, análises estratégicas e clareza de raciocínio.",duration:"13 min"},{num:3,icon:"🔎",title:"Perplexity para benchmark",desc:"Pesquisas rápidas com fontes verificadas em segundos.",duration:"9 min"},{num:4,icon:"📝",title:"Notion AI para documentação",desc:"Resumos, templates e organização automática.",duration:"10 min"},{num:5,icon:"📊",title:"Gamma para apresentações",desc:"Slides profissionais em minutos a partir de texto.",duration:"8 min"},{num:6,icon:"⚡",title:"Prompts prontos para usar hoje",desc:"Backlog, discovery, métricas, estratégia, report executivo.",duration:"12 min"}]},
+  carreira:{title:"Carreira de Product Owner",match:"94% relevante",duration:"Seção 13 · 4 artigos · ~52 min",bg:"linear-gradient(135deg,#1a1a2e,#e50914)",icon:"💼",desc:"POs valorizados não crescem por acaso. Crescem por impacto, consistência e visão. O mercado paga caro para quem resolve problemas caros.",tools:[{name:"Lenny's Newsletter",desc:"A referência #1 de carreira para PMs. 700k+ assinantes, benchmarks salariais."},{name:"Portfolio de Produto",desc:"Documentar cases com problema, processo, decisões e resultados mensuráveis."},{name:"Individual Development Plan",desc:"Plano estruturado de desenvolvimento. Adotado por Google, Meta e Nubank."}],case:{company:"Marty Cagan — O maior influenciador em carreira de produto",text:"Ex-VP eBay e fundador do SVPG. 'Inspired' e 'Empowered' são leitura obrigatória no Google, Amazon e Spotify. O conceito de Product Teams vs Feature Teams molda como headhunters avaliam senioridade."},tags:["Carreira","Salário","Crescimento","Senioridade"],mindset:"O mercado paga caro para quem resolve problemas caros. Foque em impacto, negócio e liderança. O resto tende a acompanhar.",episodes:[{num:1,icon:"🌱",title:"PO Júnior — primeiros 90 dias",desc:"O que aprender, como se posicionar, erros a evitar.",duration:"14 min"},{num:2,icon:"⚡",title:"De Júnior para Pleno",desc:"Conduzir iniciativas sozinho e entregar resultado consistente.",duration:"12 min"},{num:3,icon:"👑",title:"Chegando ao Sênior (R$14k+)",desc:"Problemas complexos e influência estratégica.",duration:"15 min"},{num:4,icon:"🤖",title:"IA como acelerador de carreira",desc:"Produtividade acima da média chama atenção.",duration:"11 min"}]},
+  certificacoes:{title:"Certificações para PO",match:"88% relevante",duration:"Seção 14 · 4 artigos · ~46 min",bg:"linear-gradient(135deg,#b8860b,#ffd700)",icon:"🏆",desc:"Certificações certas podem acelerar sua carreira e abrir portas. Certificação abre a porta — quem permanece é quem gera resultado real.",tools:[{name:"Scrum.org (PSPO I, II, III)",desc:"A mais rigorosa e respeitada globalmente. Exame baseado em conhecimento real."},{name:"Product School",desc:"Cursos intensivos reconhecidos por Google, Facebook e Amazon."},{name:"Reforge",desc:"Programas de 6-8 semanas em Growth, Retention e Strategy. O MBA de produto."}],case:{company:"Shopify — Certificações como vantagem competitiva",text:"Combinou certificações externas com projetos internos reais. 60%+ das posições sênior preenchidas por promoções internas. Modelo de desenvolvimento reconhecido pelo LinkedIn Learning."},tags:["Certificação","PSPO","Carreira","Estudo"],mindset:"Certificação abre a porta. Quem permanece e cresce é quem gera resultado real depois que entra.",episodes:[{num:1,icon:"🥇",title:"PSPO I — Por onde começar",desc:"Base sólida da Scrum.org. O mínimo esperado pelo mercado.",duration:"11 min"},{num:2,icon:"🚀",title:"PSPO II — Nível avançado",desc:"Decisões complexas e produto real com mais profundidade.",duration:"13 min"},{num:3,icon:"📌",title:"CSPO — Scrum Alliance",desc:"Certificação tradicional com foco em colaboração e backlog.",duration:"10 min"},{num:4,icon:"🔮",title:"AI for Product — O futuro chegou",desc:"Cursos focados em IA aplicada a produto digital.",duration:"12 min"}]},
+  glossario:{title:"Glossário — 443 Termos do Mercado",match:"100% relevante",duration:"Seção 15 · 5 artigos · 443 termos",bg:"linear-gradient(135deg,#232526,#414345)",icon:"📖",desc:"Os termos que você escuta em reuniões com CEO, PM, Tech Lead e Scrum Master. 13 categorias: Agile, Dados, Estratégia, Financeiro, Growth, Marketing, Operações, Produto, Tech, UX.",tools:[{name:"Product Glossary by Amplitude",desc:"Glossário público de métricas com fórmulas e exemplos práticos."},{name:"Shape Up Glossary",desc:"Appetite, Betting Table, Hill Charts, Scopes."},{name:"Reforge Artifact Library",desc:"Definições usadas por líderes sênior em Silicon Valley."}],case:{company:"Atlassian Team Playbook",text:"Baixado 500k+ vezes. Usado por times de produto em 10k+ empresas para padronizar linguagem e processos."},tags:["Referência","Glossário","Vocabulário","Termos"],mindset:"Dominar o vocabulário do mercado é dominar a linguagem do poder. Quem fala a língua certa, é ouvido na mesa certa.",episodes:[{num:1,icon:"🌱",title:"Termos Agile & Scrum",desc:"Sprint, Planning, Velocity, WIP, Burndown e mais.",duration:"20 min"},{num:2,icon:"📈",title:"Termos de Dados & Métricas",desc:"KPI, NPS, DAU, Cohort, Funnel, North Star.",duration:"22 min"},{num:3,icon:"💰",title:"Termos Financeiros",desc:"ARR, MRR, CAC, LTV, Churn, ROI, Runway.",duration:"18 min"},{num:4,icon:"📣",title:"Termos de Growth & Marketing",desc:"A/B Test, Activation, Viral Coefficient, AARRR.",duration:"25 min"},{num:5,icon:"💻",title:"Termos Tech",desc:"API, CI/CD, Feature Flag, Tech Debt, SLI, MTTR.",duration:"28 min"}]}
+};
+
+// ─── DATA EMPRESAS ────────────────────────────────────────────────────
+const empresas={
+  spotify:{title:"Spotify",setor:"Streaming · Tech",match:"Referência Global",bg:"linear-gradient(135deg,#1db954,#191414)",icon:"🎵",desc:"O Spotify Engineering Model de 2012 tornou-se a maior referência mundial em organização ágil escalada. Squads autônomos com missão própria, Tribes agrupando squads relacionados, Chapters mantendo excelência técnica e Guilds conectando pessoas com interesses comuns — tudo isso sem sacrificar velocidade.",licoes:[{name:"Autonomia com alinhamento",desc:"Cada squad tem missão, OKR e autoridade para decidir como entregar. O PO lidera a direção sem microgerenciar."},{name:"Tribes e Chapters",desc:"Tribes agrupam squads por área. Chapters mantêm a excelência técnica transversalmente."},{name:"Guild como comunidade de prática",desc:"Grupos voluntários de interesse que difundem conhecimento sem hierarquia."}],resultado:{company:"600+ squads, escala global sem perder agilidade",text:"O modelo foi adotado por ING Bank, Zalando, Klarna e dezenas de empresas. Provou que escala e agilidade podem coexistir quando a autonomia é estruturada."},praticas:[{num:1,icon:"🎯",title:"Squad como unidade autônoma",desc:"Cada squad tem PO, dev, UX, dados — tudo que precisa para entregar sem depender de outros.",duration:"Case"},{num:2,icon:"🏛️",title:"Tribe Alignment",desc:"Squads relacionados compartilham OKRs e contexto de produto dentro da mesma Tribe.",duration:"Case"},{num:3,icon:"📖",title:"Chapter como escola interna",desc:"Engenheiros, designers e POs se reúnem em Chapters para elevar o padrão da função.",duration:"Case"}],tags:["Agilidade","Squads","Escalabilidade","Autonomia"],principio:"Seja grande e ágil ao mesmo tempo. Autonomia sem alinhamento é caos. Alinhamento sem autonomia é burocracia."},
+  amazon:{title:"Amazon",setor:"E-commerce · Cloud · Tech",match:"Referência Global",bg:"linear-gradient(135deg,#ff9900,#232f3e)",icon:"📦",desc:"A Amazon construiu a cultura de produto mais influente do mundo com três princípios fundamentais: começar pelo cliente (Working Backwards), manter times pequenos (Two-Pizza Teams) e documentar antes de construir (PR/FAQ). Cada decisão de produto começa com a pergunta: qual problema do cliente isso resolve?",licoes:[{name:"Working Backwards",desc:"O PR/FAQ obriga o PO a escrever o press release do produto antes de qualquer linha de código. Define o problema, o usuário e o sucesso."},{name:"Two-Pizza Teams",desc:"Times pequenos o suficiente para serem alimentados com duas pizzas. Elimina overhead de comunicação e mantém foco."},{name:"Leadership Principles",desc:"14 princípios que guiam todas as decisões — de produto, engenharia e liderança. Customer Obsession é o primeiro."}],resultado:{company:"Kindle, AWS, Prime — todos nasceram do PR/FAQ",text:"Working Backwards tornou-se o padrão de ouro para alinhar produto com impacto real. Adotado por Stripe, Figma e centenas de empresas de produto ao redor do mundo."},praticas:[{num:1,icon:"📝",title:"PR/FAQ antes de qualquer dev",desc:"Press release imaginário + FAQ respondendo as perguntas difíceis. Se não consegue escrever, não vale construir.",duration:"Case"},{num:2,icon:"🍕",title:"Two-Pizza Team",desc:"Times pequenos, autônomos e com ownership claro. O PO é o dono do problema, não o gerente da tarefa.",duration:"Case"},{num:3,icon:"👤",title:"Customer Obsession",desc:"Toda reunião começa com o cliente. Dados de comportamento e feedback real orientam qualquer decisão de roadmap.",duration:"Case"}],tags:["Working Backwards","Customer Obsession","Inovação","Escala"],principio:"Comece pelo cliente e trabalhe de trás para frente. A tecnologia é o meio, não o fim."},
+  netflix:{title:"Netflix",setor:"Streaming · Entretenimento",match:"Referência Global",bg:"linear-gradient(135deg,#e50914,#221f1f)",icon:"🎬",desc:"A Netflix construiu a cultura de produto mais avançada em delivery e liberdade organizacional. Freedom & Responsibility significa que cada pessoa tem alta autonomia e alta responsabilidade. Não há aprovações em cadeia — apenas julgamento bem treinado. O resultado: 4.000+ deploys por dia para 260M usuários.",licoes:[{name:"Freedom & Responsibility",desc:"Sem processos engessados. Cada time tem autonomia para decidir — e total responsabilidade pelo resultado."},{name:"Chaos Engineering",desc:"Testar falhas intencionalmente em produção. O que não te mata te torna mais resiliente."},{name:"A/B Testing em escala",desc:"Qualquer decisão de produto é testada em uma fração da base antes de ser expandida."}],resultado:{company:"Benchmark global de delivery e cultura de produto contínuo",text:"4.000+ deploys diários, Feature Flags para cada lançamento, Chaos Monkey testando resiliência. O delivery da Netflix é o padrão que a indústria aspira."},praticas:[{num:1,icon:"🚀",title:"CI/CD extremo",desc:"Cada feature vai para produção múltiplas vezes por dia com cobertura de testes e rollback automatizado.",duration:"Case"},{num:2,icon:"🎌",title:"Feature Flags",desc:"Lançamentos graduais por segmento, rollback instantâneo sem novo deploy. PO controla o acesso.",duration:"Case"},{num:3,icon:"🔥",title:"Chaos Monkey",desc:"Sistema que derruba serviços aleatoriamente em produção para testar resiliência. Nasceu de uma crise real.",duration:"Case"}],tags:["Delivery","Cultura","CI/CD","Resiliência"],principio:"Liberdade com responsabilidade. Contexto, não controle. Julgamento bem treinado supera processo engessado."},
+  airbnb:{title:"Airbnb",setor:"Marketplace · Hospitalidade",match:"Referência Global",bg:"linear-gradient(135deg,#ff5a5f,#484848)",icon:"🏠",desc:"O Airbnb é o maior case de discovery manual da história do produto digital. Em 2009, os fundadores foram pessoalmente a campo fotografar apartamentos em Nova York para entender por que as reservas não convertiam. Essa obsessão com entender o usuário de perto transformou uma startup quase falida num negócio de bilhões.",licoes:[{name:"Discovery no campo",desc:"Quando os dados não explicam, vá ao usuário. Os fundadores viram problemas que nenhuma análise revelaria."},{name:"Design de experiência como produto",desc:"Fotografia profissional como feature de produto. O insight veio do campo, não de uma planilha."},{name:"Product Researchers integrados",desc:"Hoje o Airbnb tem centenas de pesquisadores. A cultura de entender o usuário está no DNA da empresa."}],resultado:{company:"De US$200/semana e quase falindo a um negócio de bilhões",text:"A receita dobrou em uma semana após a mudança nas fotos. A lição perdurou: cada grande decisão de produto começa com observação direta do usuário."},praticas:[{num:1,icon:"🎤",title:"Entrevistas de campo",desc:"Sair do escritório e observar usuários no contexto real de uso. O que eles fazem supera o que eles dizem.",duration:"Case"},{num:2,icon:"📸",title:"MVP experimental",desc:"Alugar uma câmera para testar a hipótese antes de construir qualquer sistema de upload de fotos.",duration:"Case"},{num:3,icon:"🧪",title:"Hipótese validada antes do dev",desc:"Testar com recursos mínimos antes de qualquer investimento em tecnologia.",duration:"Case"}],tags:["Discovery","Usuário","MVP","Hospitalidade"],principio:"Sair do escritório é a primeira feature. O que você observa no campo vale mais do que qualquer análise de dados isolada."},
+  nubank:{title:"Nubank",setor:"Fintech · Banking",match:"Referência Brasil",bg:"linear-gradient(135deg,#820ad1,#1c1c1e)",icon:"💜",desc:"O Nubank construiu o maior banco digital do mundo com produto centrado no usuário e transparência radical com stakeholders. O Product Review quinzenal com C-levels, onde POs apresentam dados reais sem filtros, criou uma cultura de accountability que se tornou referência no mercado brasileiro e internacional de fintechs.",licoes:[{name:"Product Review com C-levels",desc:"Reunião quinzenal onde POs apresentam métricas reais aos executivos. Dados, não opiniões. Sem PowerPoint bonito para esconder número feio."},{name:"Produto como vantagem competitiva",desc:"Em um mercado dominado por bancos tradicionais, o Nubank usou UX e simplicidade como diferenciais."},{name:"Customer experience como produto",desc:"NPS altíssimo como resultado direto de decisões de produto — não de atendimento."}],resultado:{company:"90M de clientes — o maior banco digital do mundo",text:"Cresceu sem agências físicas usando apenas produto digital. Inspirou Neon, Mercado Pago e dezenas de fintechs a adotar o modelo de transparência com stakeholders."},praticas:[{num:1,icon:"📊",title:"Product Review quinzenal",desc:"POs apresentam resultados a C-levels com dados reais. Cria alinhamento e accountability sem burocracia.",duration:"Case"},{num:2,icon:"💜",title:"NPS como North Star interna",desc:"Satisfação do cliente como métrica de primeiro nível em todas as decisões de produto.",duration:"Case"},{num:3,icon:"🚀",title:"Feature teams autônomos",desc:"Times com missão clara e autonomia para decidir como entregar. Sem aprovações em cadeia.",duration:"Case"}],tags:["Fintech","Brasil","Transparência","Customer Experience"],principio:"Transparência com stakeholders não é fraqueza — é a fundação da confiança que permite autonomia real."},
+  google:{title:"Google",setor:"Tech · Busca · Cloud",match:"Referência Global",bg:"linear-gradient(135deg,#4285f4,#0f9d58)",icon:"🔵",desc:"O Google inventou o modelo de OKRs que hoje governa as decisões de produto nas maiores empresas do mundo. Além dos OKRs, o Design Doc antes de qualquer projeto relevante e o 20% Time que originou Gmail e Maps são práticas que definiram como grandes organizações de produto operam.",licoes:[{name:"OKRs como sistema nervoso",desc:"Objectives & Key Results: objetivo inspirador + resultados mensuráveis. Conecta squads à estratégia da empresa."},{name:"Design Doc antes de qualquer projeto",desc:"Documento técnico e de produto que qualquer pessoa na empresa pode revisar antes do início. Elimina retrabalho."},{name:"20% Time",desc:"Engenheiros e PMs dedicam 20% do tempo a projetos próprios. Gmail, Maps e AdSense nasceram aqui."}],resultado:{company:"OKRs adotados por 50%+ das Fortune 500",text:"O sistema de OKRs que John Doerr levou ao Google em 1999 é hoje o padrão global de governança de produto. Design Docs e a cultura de dados definem o benchmark de excelência em produto."},praticas:[{num:1,icon:"🎯",title:"OKR trimestral por squad",desc:"Cada time define objetivos e resultados-chave conectados à estratégia da empresa.",duration:"Case"},{num:2,icon:"📋",title:"Design Doc público",desc:"Antes de qualquer projeto relevante, o documento é publicado e revisado. Qualidade antes da velocidade.",duration:"Case"},{num:3,icon:"📊",title:"Cultura de dados em cada decisão",desc:"Nenhuma decisão de produto é tomada sem análise de dados. Hipóteses são testadas, não debatidas.",duration:"Case"}],tags:["OKRs","Escala","Inovação","Dados"],principio:"Meça o que importa. OKRs não são cobranças — são clareza compartilhada sobre o que realmente move o negócio."},
+  intercom:{title:"Intercom",setor:"SaaS · Customer Engagement",match:"Referência Global",bg:"linear-gradient(135deg,#1f8dd6,#0a2a4a)",icon:"💬",desc:"O Intercom é a empresa que inventou o RICE Score e transformou a forma como times de produto priorizam. Ao perceber que seu backlog era governado pelo volume de pedidos e não pelo impacto real, criou um framework que foi adotado por Google, HubSpot, Dropbox e centenas de outras empresas.",licoes:[{name:"RICE Score",desc:"Reach × Impact × Confidence ÷ Effort. O framework que transformou priorização subjetiva em decisão objetiva."},{name:"Dizer não com dados",desc:"O RICE permite ao PO recusar pedidos de stakeholders com argumento numérico, não opinião."},{name:"Backlog enxuto como princípio",desc:"Menos itens, mais clareza. Um backlog menor com itens bem definidos entrega mais do que uma lista enorme de ideias."}],resultado:{company:"Backlog reduzido em 60%, features com 3x mais impacto",text:"O RICE foi adotado por Google, HubSpot e Dropbox. Transformou a cultura de priorização da indústria e tornou o 'por que priorizamos isso?' uma pergunta respondível com dados."},praticas:[{num:1,icon:"📈",title:"RICE como protocolo de priorização",desc:"Reach, Impact, Confidence, Effort. Cada item do backlog tem um score numérico comparável.",duration:"Case"},{num:2,icon:"🗑️",title:"Limpeza radical do backlog",desc:"Remover impiedosamente itens sem problema claro, sem dono, sem relevância estratégica.",duration:"Case"},{num:3,icon:"📊",title:"Prioridade visível para todos",desc:"O backlog priorizado com RICE é compartilhado com stakeholders. Transparência elimina conflito político.",duration:"Case"}],tags:["RICE","Priorização","Backlog","SaaS"],principio:"Priorizar é decidir o que não fazer. Um backlog honesto é mais valioso do que um backlog completo."},
+  duolingo:{title:"Duolingo",setor:"EdTech · Aprendizado",match:"Referência Global",bg:"linear-gradient(135deg,#58cc02,#1cb0f6)",icon:"🦉",desc:"O Duolingo transformou aprendizado de idiomas em produto de consumo com uma das estratégias de North Star Metric mais estudadas do mundo. A escolha do DAL (Daily Active Learning) como métrica central e a invenção do streak de gamificação são casos obrigatórios para qualquer PO que queira entender retenção e engagement.",licoes:[{name:"North Star única e poderosa",desc:"DAL (Daily Active Learning) alinha todas as decisões — notificações, design, features — em torno de uma única pergunta: o usuário aprendeu hoje?"},{name:"Gamificação baseada em dados",desc:"O streak não foi inventado no whiteboard — emergiu da análise de comportamento de usuários que mantinham alta retenção."},{name:"Experimentos antes de features",desc:"Qualquer mudança de produto é testada em um subset da base. A taxa de experimentos é parte do processo."}],resultado:{company:"De 5M para 80M de DAUs — retenção de 55% vs 10-15% da indústria",text:"O famoso streak de notificação do Duolingo nasceu diretamente da análise de métricas de retenção. A owl de notificação virou fenômeno cultural e case de produto estudado nas melhores escolas de negócio."},praticas:[{num:1,icon:"⭐",title:"North Star como filtro de decisão",desc:"Toda feature proposta passa pelo teste: isso aumenta o DAL? Se não, por que estamos construindo?",duration:"Case"},{num:2,icon:"🔥",title:"Streak como mecanismo de retenção",desc:"Gamificação baseada em comportamento real. Descoberto em dados, validado em experimento, escalado globalmente.",duration:"Case"},{num:3,icon:"🧪",title:"Cultura de experimentos constantes",desc:"Qualquer hipótese de produto vira experimento com grupo de controle antes de ir para toda a base.",duration:"Case"}],tags:["North Star","Retenção","Gamificação","EdTech"],principio:"Uma métrica clara muda tudo. Quando o time inteiro sabe o que mede sucesso, as decisões ficam mais fáceis e mais rápidas."},
+  linear:{title:"Linear",setor:"SaaS · Produtividade · Dev Tools",match:"Referência Emergente",bg:"linear-gradient(135deg,#5e6ad2,#1a1a2e)",icon:"⚡",desc:"O Linear redefiniu o que uma ferramenta de gestão de produto pode ser. Ao rejeitar a complexidade do Jira, criou uma experiência que prioriza velocidade, foco e prazer de uso. Em pouco tempo, tornou-se a ferramenta de escolha de startups de alto crescimento e passou a ser referência de como produto deve ser construído.",licoes:[{name:"Opiniões fortes e bem executadas",desc:"O Linear não tenta servir a todos. Tem opiniões claras sobre como times de produto devem trabalhar."},{name:"Performance como feature",desc:"Cada interação na interface é instantânea. A velocidade do produto é tratada como funcionalidade, não como detalhe."},{name:"Dog fooding extremo",desc:"O time usa o próprio Linear para construir o Linear. Cada problema sentido internamente vira oportunidade de produto."}],resultado:{company:"Adotado por Vercel, Loom, Raycast e centenas de startups tier-1",text:"O Linear se tornou o novo padrão de tooling para POs modernos. Cresceu principalmente por boca a boca entre times de produto que valorizavam velocidade e simplicidade."},praticas:[{num:1,icon:"⚡",title:"Velocidade como produto",desc:"Cada ação no Linear acontece em menos de 100ms. Performance é tratada como feature de primeira classe.",duration:"Case"},{num:2,icon:"🎯",title:"Roadmap visual nativo",desc:"Planejamento de ciclos e priorização integrados na mesma ferramenta que gerencia o backlog.",duration:"Case"},{num:3,icon:"🐕",title:"Dog fooding contínuo",desc:"O time constrói o produto usando o próprio produto. Cada fricção sentida internamente vira melhoria real.",duration:"Case"}],tags:["Tooling","Velocidade","Startups","Dev Tools"],principio:"Ferramentas devem desaparecer. Quando a ferramenta é transparente, o time foca no que realmente importa: o produto."},
+  figma:{title:"Figma",setor:"Design · Colaboração · SaaS",match:"Referência Global",bg:"linear-gradient(135deg,#f24e1e,#a259ff)",icon:"🎨",desc:"O Figma transformou o processo de design de produto ao torná-lo colaborativo em tempo real. POs, designers, devs e stakeholders trabalham no mesmo arquivo ao mesmo tempo — eliminando ciclos de aprovação, versões de arquivo e handoff por e-mail. O produto é tão bom que a Adobe tentou comprar a empresa por US$20 bilhões.",licoes:[{name:"Colaboração como core value",desc:"O design não é mais um entregável — é um processo compartilhado. POs validam fluxos antes do desenvolvimento."},{name:"Browser-first",desc:"Decisão estratégica de ser uma aplicação web eliminou barreiras de instalação e tornou a colaboração natural."},{name:"Community como canal de crescimento",desc:"Templates da comunidade e plugins criados por usuários geraram crescimento orgânico e network effects."}],resultado:{company:"Padrão global em design de produto — Microsoft, Twitter, Uber",text:"O Figma se tornou indispensável para times de produto. A tentativa de aquisição pela Adobe por US$20B (bloqueada por reguladores) foi o reconhecimento de que o Figma redefiniu o mercado."},praticas:[{num:1,icon:"🖥️",title:"Design como artefato compartilhado",desc:"PO, UX e dev trabalham no mesmo arquivo. Reduz ciclos de revisão e alinha expectativas antes do desenvolvimento.",duration:"Case"},{num:2,icon:"🔗",title:"Prototipação rápida para validação",desc:"POs usam Figma para validar fluxos com usuários antes de qualquer desenvolvimento.",duration:"Case"},{num:3,icon:"🧩",title:"Plugins e comunidade como produto",desc:"Ecossistema de plugins criado pela comunidade que expande o produto sem custo direto para o time.",duration:"Case"}],tags:["Design","Colaboração","Prototipação","SaaS"],principio:"O melhor produto é aquele que as pessoas ensinam umas às outras a usar. Colaboração não é uma feature — é a proposta de valor."}
+};
+
+// ─── ARTICLES fallback ────────────────────────────────────────────────
+const ARTICLES={};
+Object.keys(data).forEach(k=>{
+  ARTICLES[k]=data[k].episodes.map(ep=>({content:[ep.desc,"Este artigo faz parte da seção "+data[k].title+". Aprofunde este tema explorando os outros artigos desta seção.","O conteúdo completo aborda casos reais, frameworks e aplicações práticas para o dia a dia do Product Owner."]}));
+});
+// artigos completos para discovery
+ARTICLES['discovery']=[{content:["O maior desperdício em produto digital não é construir lento — é construir a coisa errada com perfeição. Times que vão direto para soluções sem entender o problema estão jogando energia no vento.","Entender o problema a fundo significa ir além do pedido superficial: quem é o usuário afetado, qual é a jornada atual, onde ela falha e qual é o custo real dessa falha.","Times que investem em discovery consistentemente entregam produtos mais relevantes, com menos retrabalho e maior impacto."]},{content:["Entrevistar usuários parece simples até você perceber que está fazendo todas as perguntas erradas. 'Você usaria essa feature?' recebe quase sempre um 'sim'.","As melhores perguntas começam com 'me conta sobre a última vez que você...' ou 'como você lida hoje com...'. Tiram o usuário do campo hipotético e trazem para a experiência real.","A cadência de pelo menos uma entrevista por semana, proposta por Teresa Torres, mantém o contato contínuo com a realidade do usuário."]},{content:["Uma hipótese de produto bem formulada tem três elementos: um problema claro, uma solução proposta e uma métrica de sucesso.","Testar hipóteses rapidamente é o antídoto para o planejamento excessivo. Um protótipo de papel pode validar uma hipótese em dias, sem escrever uma linha de código.","Times que operam com ciclos curtos de hipótese-teste-aprendizado raramente desperdiçam uma sprint inteira na direção errada."]},{content:["MVP não significa produto ruim lançado cedo — significa a menor experiência possível que valida sua hipótese mais crítica.","Existem dezenas de formatos de validação: Wizard of Oz, Concierge, Smoke Test. Cada um responde perguntas diferentes com custos diferentes.","A escolha do formato certo é uma skill do PO. POs que dominam esse repertório constroem produtos mais ousados."]},{content:["O produto que você já tem é uma mina de ouro de insights. Análise de funil, mapas de calor, gravações de sessão, taxa de adoção de features: cada fonte revela comportamentos reais.","O PO que olha dados do produto regularmente desenvolve uma intuição calibrada por evidência.","A combinação de dados quantitativos (o quê) com dados qualitativos (por quê) é o melhor discovery possível."]}];
+
+let _arSection=null,_arIdx=0,currentModalSection=null;
+const wishlist=new Set();
+
+// ─── MODAL SEÇÕES ─────────────────────────────────────────────────────
+function openModal(id){
+  const d=data[id];if(!d)return;
+  currentModalSection=id;
+  document.getElementById('modal-hero-bg').style.background=d.bg;
+  document.getElementById('modal-title').textContent=d.icon+' '+d.title;
+  document.getElementById('modal-match').textContent=d.match;
+  document.getElementById('modal-duration').textContent=d.duration;
+  document.getElementById('modal-desc').textContent=d.desc;
+  document.getElementById('modal-tools').innerHTML=d.tools.map(t=>`<div class="modal-tool-item"><strong>${t.name}</strong><span>${t.desc}</span></div>`).join('');
+  document.getElementById('modal-case').innerHTML=`<strong>🏆 ${d.case.company}</strong>${d.case.text}`;
+  document.getElementById('modal-tags').innerHTML=d.tags.map(t=>`<span class="modal-tag">${t}</span>`).join('');
+  document.getElementById('modal-cats').textContent=d.tags.join(', ');
+  document.getElementById('modal-mindset').textContent='"'+d.mindset+'"';
+  document.getElementById('modal-episodes').innerHTML=d.episodes.map((ep,i)=>
+    `<div class="article-item" onclick="openArticleReader('${id}',${i},event)">
+      <span class="article-num">${ep.num}</span>
+      <div class="article-icon">${ep.icon}</div>
+      <div class="article-info"><div class="article-title">${ep.title}</div><div class="article-desc">${ep.desc}</div><div class="article-rt">⏱ ${ep.duration} de leitura</div></div>
+      <span style="color:#aaa;padding-left:8px;align-self:center">›</span>
+    </div>`).join('');
+  const wb=document.getElementById('modal-wishlist-btn');
+  if(wishlist.has(id)){wb.textContent='✓ Na Minha Lista';wb.style.background='rgba(70,211,105,.2)';wb.style.color='#46d369';}
+  else{wb.textContent='+ Minha Lista';wb.style.background='rgba(109,109,110,.5)';wb.style.color='';}
+  document.getElementById('modal-read-btn').onclick=()=>openFirstArticle();
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');document.body.style.overflow='';}
+function closeModalOutside(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+// ─── MODAL EMPRESAS ───────────────────────────────────────────────────
+function openEmpresa(id){
+  const e=empresas[id];if(!e)return;
+  document.getElementById('empresa-hero-bg').style.background=e.bg;
+  document.getElementById('empresa-title').textContent=e.icon+' '+e.title;
+  document.getElementById('empresa-match').textContent=e.match;
+  document.getElementById('empresa-setor').textContent=e.setor;
+  document.getElementById('empresa-desc').textContent=e.desc;
+  document.getElementById('empresa-licoes').innerHTML=e.licoes.map(l=>`<div class="modal-tool-item"><strong>${l.name}</strong><span>${l.desc}</span></div>`).join('');
+  document.getElementById('empresa-resultado').innerHTML=`<strong>🏆 ${e.resultado.company}</strong>${e.resultado.text}`;
+  document.getElementById('empresa-tags').innerHTML=e.tags.map(t=>`<span class="modal-tag">${t}</span>`).join('');
+  document.getElementById('empresa-principio').textContent='"'+e.principio+'"';
+  document.getElementById('empresa-praticas').innerHTML=e.praticas.map(p=>
+    `<div class="article-item" style="cursor:default">
+      <span class="article-num">${p.num}</span>
+      <div class="article-icon">${p.icon}</div>
+      <div class="article-info"><div class="article-title">${p.title}</div><div class="article-desc">${p.desc}</div><div class="article-rt">📌 ${p.duration}</div></div>
+    </div>`).join('');
+  document.getElementById('empresa-read-btn').onclick=()=>{showToast('Case completo de '+e.title);};
+  document.getElementById('empresa-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeEmpresa(){document.getElementById('empresa-overlay').classList.remove('open');document.body.style.overflow='';}
+function closeEmpresaOutside(ev){if(ev.target===document.getElementById('empresa-overlay'))closeEmpresa();}
+
+// ─── ARTICLE READER ───────────────────────────────────────────────────
+function openFirstArticle(){const s=currentModalSection;closeModal();setTimeout(()=>openArticleReader(s,0,null),200);}
+
+function openArticleReader(sectionKey,idx,event){
+  if(event)event.stopPropagation();
+  if(!ARTICLES[sectionKey])return;
+  _arSection=sectionKey;_arIdx=idx;
+  _renderArticle();
+  document.getElementById('article-reader').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('article-reader').scrollTop=0;
+}
+function closeArticleReader(){document.getElementById('article-reader').classList.remove('open');document.body.style.overflow='';}
+function navigateArticle(dir){
+  const arts=ARTICLES[_arSection];if(!arts)return;
+  const n=_arIdx+dir;
+  if(n>=0&&n<arts.length){_arIdx=n;_renderArticle();}
+  document.getElementById('article-reader').scrollTop=0;
+}
+function _renderArticle(){
+  const arts=ARTICLES[_arSection],art=arts[_arIdx],sec=data[_arSection];if(!art||!sec)return;
+  document.getElementById('ar-section-tag').textContent=sec.icon+' '+sec.title;
+  document.getElementById('ar-title').textContent=sec.episodes[_arIdx]?sec.episodes[_arIdx].title:'Artigo '+(_arIdx+1);
+  document.getElementById('ar-readtime').textContent='⏱ '+(sec.episodes[_arIdx]?sec.episodes[_arIdx].duration:'10 min')+' de leitura';
+  document.getElementById('ar-body').innerHTML=art.content.map(p=>'<p>'+p+'</p>').join('');
+  document.getElementById('ar-counter').textContent=(_arIdx+1)+' de '+arts.length;
+  document.getElementById('ar-prev').disabled=(_arIdx===0);
+  document.getElementById('ar-next').disabled=(_arIdx===arts.length-1);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────
+function openFirstArticle(){const s=currentModalSection;closeModal();setTimeout(()=>openArticleReader(s,0,null),200);}
+function toggleModalWishlist(){
+  if(!currentModalSection)return;
+  toggleWishlistById(currentModalSection);
+  const b=document.getElementById('modal-wishlist-btn');
+  if(wishlist.has(currentModalSection)){b.textContent='✓ Na Minha Lista';b.style.background='rgba(70,211,105,.2)';b.style.color='#46d369';}
+  else{b.textContent='+ Minha Lista';b.style.background='rgba(109,109,110,.5)';b.style.color='';}
+}
+function toggleWishlist(btn,key){
+  toggleWishlistById(key);
+  if(wishlist.has(key)){btn.textContent='✓';btn.style.background='rgba(70,211,105,.25)';btn.style.borderColor='#46d369';showToast('Adicionado à sua lista!');}
+  else{btn.textContent='+';btn.style.background='';btn.style.borderColor='';showToast('Removido da lista.');}
+}
+function toggleWishlistById(k){if(wishlist.has(k))wishlist.delete(k);else wishlist.add(k);}
+function markUseful(btn,k){btn.style.background='rgba(229,9,20,.25)';btn.style.borderColor='var(--red)';showToast((data[k]?data[k].title:k)+' marcado como útil!');}
+function scrollRow(btn,dir){const t=btn.parentElement.querySelector('.row-track');if(t)t.scrollBy({left:dir*700,behavior:'smooth'});}
+function scrollTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'});}
+function filterCategory(cat,btn){
+  document.querySelectorAll('.genre-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#row-category .card').forEach(c=>{c.style.display=(cat==='all'||c.dataset.cat===cat)?'':'none';});
+}
+window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>60));
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const r=document.getElementById('article-reader');
+  if(r?.classList.contains('open'))closeArticleReader();
+  else if(document.getElementById('empresa-overlay').classList.contains('open'))closeEmpresa();
+  else closeModal();
+},true);
+let _toastTimer=null;
+function showToast(msg){
+  let t=document.getElementById('pf-toast');
+  if(!t){t=document.createElement('div');t.id='pf-toast';t.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:12px 28px;border-radius:6px;font-size:.9rem;z-index:9999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;border:1px solid rgba(255,255,255,.12);max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5);';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},3000);
+}
+</script>
+</body>
+</html>
